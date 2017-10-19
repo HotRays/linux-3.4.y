@@ -71,8 +71,8 @@
 #define CFG_ETHER_LOOPBACK_MODE					0       /* 0: disable, 1: 10M, 2: 100M(x), 3: 1000M(x) */
 
  /*for rtl8211*/
-#define	CFG_ETHER_GMAC_PHY_IRQ_NUM				(IRQ_GPIO_A_START + 9)
-#define	CFG_ETHER_GMAC_PHY_RST_NUM				(PAD_GPIO_A + 10)
+#define	CFG_ETHER_GMAC_PHY_IRQ_NUM				(IRQ_GPIO_E_START + 23)
+#define	CFG_ETHER_GMAC_PHY_RST_NUM				(PAD_GPIO_E + 22)
 
 /*------------------------------------------------------------------------------
  * 	Nand (HWECC)
@@ -93,50 +93,115 @@
  * 	Display (DPC and MLC)
  */
 /* Primary */
-#define CFG_DISP_PRI_SCREEN_LAYER               0
-#define CFG_DISP_PRI_SCREEN_RGB_FORMAT          MLC_RGBFMT_A8R8G8B8
-#define CFG_DISP_PRI_SCREEN_PIXEL_BYTE	        4
-#define CFG_DISP_PRI_SCREEN_COLOR_KEY	        0x090909
+/* LCD */
+#define CFG_DISP_PRI_LCD_SCREEN_LAYER               0
+#define CFG_DISP_PRI_LCD_SCREEN_RGB_FORMAT          MLC_RGBFMT_A8R8G8B8
+#define CFG_DISP_PRI_LCD_SCREEN_PIXEL_BYTE	        4
+#define CFG_DISP_PRI_LCD_SCREEN_COLOR_KEY	        0x090909
 
-#define CFG_DISP_PRI_VIDEO_PRIORITY				2	// 0, 1, 2, 3
-#define CFG_DISP_PRI_BACK_GROUND_COLOR	     	0x000000
+#define CFG_DISP_PRI_LCD_VIDEO_PRIORITY				2	// 0, 1, 2, 3
+#define CFG_DISP_PRI_LCD_BACK_GROUND_COLOR	     	0x000000
 
-#define CFG_DISP_PRI_MLC_INTERLACE              CFALSE
+#define CFG_DISP_PRI_LCD_MLC_INTERLACE              CFALSE
 
-#define	CFG_DISP_PRI_LCD_WIDTH_MM				154
-#define	CFG_DISP_PRI_LCD_HEIGHT_MM				85
+#define	CFG_DISP_PRI_LCD_LCD_WIDTH_MM				154
+#define	CFG_DISP_PRI_LCD_LCD_HEIGHT_MM				85
 
-#define CFG_DISP_PRI_RESOL_WIDTH          		1024	// X Resolution
-#define CFG_DISP_PRI_RESOL_HEIGHT				600	// Y Resolution
+#define CFG_DISP_PRI_LCD_RESOL_WIDTH          		800	// X Resolution
+#define CFG_DISP_PRI_LCD_RESOL_HEIGHT				480	// Y Resolution
 
-#define CFG_DISP_PRI_HSYNC_SYNC_WIDTH            20
-#define CFG_DISP_PRI_HSYNC_BACK_PORCH           160
-#define CFG_DISP_PRI_HSYNC_FRONT_PORCH          160
-#define CFG_DISP_PRI_HSYNC_ACTIVE_HIGH          CTRUE
-#define CFG_DISP_PRI_VSYNC_SYNC_WIDTH            3
-#define CFG_DISP_PRI_VSYNC_BACK_PORCH            23
-#define CFG_DISP_PRI_VSYNC_FRONT_PORCH           12
-#define CFG_DISP_PRI_VSYNC_ACTIVE_HIGH 	        CTRUE
+#define CFG_DISP_PRI_LCD_HSYNC_SYNC_WIDTH           48
+#define CFG_DISP_PRI_LCD_HSYNC_BACK_PORCH          	40 
+#define CFG_DISP_PRI_LCD_HSYNC_FRONT_PORCH         	40
+#define CFG_DISP_PRI_LCD_HSYNC_ACTIVE_HIGH          CFALSE
+#define CFG_DISP_PRI_LCD_VSYNC_SYNC_WIDTH           3
+#define CFG_DISP_PRI_LCD_VSYNC_BACK_PORCH           29
+#define CFG_DISP_PRI_LCD_VSYNC_FRONT_PORCH          13 
+#define CFG_DISP_PRI_LCD_VSYNC_ACTIVE_HIGH 	        CFALSE
 
-#define CFG_DISP_PRI_CLKGEN0_SOURCE             DPC_VCLK_SRC_PLL2
-#define CFG_DISP_PRI_CLKGEN0_DIV                12 // even divide
-#define CFG_DISP_PRI_CLKGEN0_DELAY              0
-#define CFG_DISP_PRI_CLKGEN0_INVERT				0
-#define CFG_DISP_PRI_CLKGEN1_SOURCE             DPC_VCLK_SRC_VCLK2
-#define CFG_DISP_PRI_CLKGEN1_DIV                1
-#define CFG_DISP_PRI_CLKGEN1_DELAY              0
-#define CFG_DISP_PRI_CLKGEN1_INVERT				0
-#define CFG_DISP_PRI_CLKSEL1_SELECT				0
-#define CFG_DISP_PRI_PADCLKSEL                  DPC_PADCLKSEL_VCLK	/* VCLK=CLKGEN1, VCLK12=CLKGEN0 */
+#define CFG_DISP_PRI_LCD_CLKGEN0_SOURCE             DPC_VCLK_SRC_PLL2
+#define CFG_DISP_PRI_LCD_CLKGEN0_DIV                12 // even divide
+#define CFG_DISP_PRI_LCD_CLKGEN0_DELAY              0
+#define CFG_DISP_PRI_LCD_CLKGEN0_INVERT				0
+#define CFG_DISP_PRI_LCD_CLKGEN1_SOURCE             DPC_VCLK_SRC_VCLK2
+#define CFG_DISP_PRI_LCD_CLKGEN1_DIV                1
+#define CFG_DISP_PRI_LCD_CLKGEN1_DELAY              0
+#define CFG_DISP_PRI_LCD_CLKGEN1_INVERT				0
+#define CFG_DISP_PRI_LCD_CLKSEL1_SELECT				0
+#define CFG_DISP_PRI_LCD_PADCLKSEL                  DPC_PADCLKSEL_VCLK	/* VCLK=CLKGEN1, VCLK12=CLKGEN0 */
 
-#define	CFG_DISP_PRI_PIXEL_CLOCK				800000000/CFG_DISP_PRI_CLKGEN0_DIV
+#define	CFG_DISP_PRI_LCD_PIXEL_CLOCK				800000000/CFG_DISP_PRI_LCD_CLKGEN0_DIV
 
-#define	CFG_DISP_PRI_OUT_SWAPRB 				CFALSE
-#define CFG_DISP_PRI_OUT_FORMAT                 DPC_FORMAT_RGB888
-#define CFG_DISP_PRI_OUT_YCORDER                DPC_YCORDER_CbYCrY
-#define CFG_DISP_PRI_OUT_INTERLACE              CFALSE
-#define CFG_DISP_PRI_OUT_INVERT_FIELD           CFALSE
+#define	CFG_DISP_PRI_LCD_OUT_SWAPRB 				CFALSE
+#define CFG_DISP_PRI_LCD_OUT_FORMAT                 DPC_FORMAT_RGB888
+#define CFG_DISP_PRI_LCD_OUT_YCORDER                DPC_YCORDER_CbYCrY
+#define CFG_DISP_PRI_LCD_OUT_INTERLACE              CFALSE
+#define CFG_DISP_PRI_LCD_OUT_INVERT_FIELD           CFALSE
 #define CFG_DISP_LCD_MPY_TYPE						0
+/* MIPI */
+
+#define CFG_DISP_PRI_MIPI_RESOL_WIDTH          		1024	// X Resolution
+#define CFG_DISP_PRI_MIPI_RESOL_HEIGHT				600	// Y Resolution
+#define CFG_DISP_PRI_MIPI_HSYNC_SYNC_WIDTH           	48
+#define CFG_DISP_PRI_MIPI_HSYNC_BACK_PORCH          	48 
+#define CFG_DISP_PRI_MIPI_HSYNC_FRONT_PORCH         	40
+#define CFG_DISP_PRI_MIPI_HSYNC_ACTIVE_HIGH          	CFALSE
+#define CFG_DISP_PRI_MIPI_VSYNC_SYNC_WIDTH           	3
+#define CFG_DISP_PRI_MIPI_VSYNC_BACK_PORCH           	16
+#define CFG_DISP_PRI_MIPI_VSYNC_FRONT_PORCH          	13 
+#define CFG_DISP_PRI_MIPI_VSYNC_ACTIVE_HIGH 	        CFALSE
+#define CFG_DISP_PRI_MIPI_CLKGEN0_SOURCE             	DPC_VCLK_SRC_PLL2
+#define CFG_DISP_PRI_MIPI_CLKGEN0_DIV                	14 // even divide
+#define CFG_DISP_PRI_MIPI_CLKGEN0_DELAY              	0
+#define CFG_DISP_PRI_MIPI_CLKGEN0_INVERT		0
+#define CFG_DISP_PRI_MIPI_CLKGEN1_SOURCE             	DPC_VCLK_SRC_VCLK2
+#define CFG_DISP_PRI_MIPI_CLKGEN1_DIV                	1
+#define	CFG_DISP_PRI_MIPI_PIXEL_CLOCK				614399000/14
+
+/* LVDS */
+#define CFG_DISP_PRI_LVDS_SCREEN_LAYER               	0
+#define CFG_DISP_PRI_LVDS_SCREEN_RGB_FORMAT          	MLC_RGBFMT_A8R8G8B8
+#define CFG_DISP_PRI_LVDS_SCREEN_PIXEL_BYTE	        4
+#define CFG_DISP_PRI_LVDS_SCREEN_COLOR_KEY	        0x090909
+
+#define CFG_DISP_PRI_LVDS_VIDEO_PRIORITY		2	// 0, 1, 2, 3
+#define CFG_DISP_PRI_LVDS_BACK_GROUND_COLOR	     	0x000000
+
+#define CFG_DISP_PRI_LVDS_MLC_INTERLACE              	CFALSE
+
+#define	CFG_DISP_PRI_LVDS_LCD_WIDTH_MM			154
+#define	CFG_DISP_PRI_LVDS_LCD_HEIGHT_MM			85
+
+#define CFG_DISP_PRI_LVDS_RESOL_WIDTH          		1280	// X Resolution
+#define CFG_DISP_PRI_LVDS_RESOL_HEIGHT			800	// Y Resolution
+
+#define CFG_DISP_PRI_LVDS_HSYNC_SYNC_WIDTH           	1
+#define CFG_DISP_PRI_LVDS_HSYNC_BACK_PORCH          	50
+#define CFG_DISP_PRI_LVDS_HSYNC_FRONT_PORCH         	110
+#define CFG_DISP_PRI_LVDS_HSYNC_ACTIVE_HIGH          	CFALSE
+#define CFG_DISP_PRI_LVDS_VSYNC_SYNC_WIDTH           	1
+#define CFG_DISP_PRI_LVDS_VSYNC_BACK_PORCH           	0
+#define CFG_DISP_PRI_LVDS_VSYNC_FRONT_PORCH          	23 
+#define CFG_DISP_PRI_LVDS_VSYNC_ACTIVE_HIGH 	        CFALSE
+
+#define CFG_DISP_PRI_LVDS_CLKGEN0_SOURCE             	DPC_VCLK_SRC_PLL2
+#define CFG_DISP_PRI_LVDS_CLKGEN0_DIV                	8 // even divide
+#define CFG_DISP_PRI_LVDS_CLKGEN0_DELAY              	0
+#define CFG_DISP_PRI_LVDS_CLKGEN0_INVERT	     	0
+#define CFG_DISP_PRI_LVDS_CLKGEN1_SOURCE             	DPC_VCLK_SRC_VCLK2
+#define CFG_DISP_PRI_LVDS_CLKGEN1_DIV                	1
+#define CFG_DISP_PRI_LVDS_CLKGEN1_DELAY              	0
+#define CFG_DISP_PRI_LVDS_CLKGEN1_INVERT		0
+#define CFG_DISP_PRI_LVDS_CLKSEL1_SELECT		0
+#define CFG_DISP_PRI_LVDS_PADCLKSEL                  	DPC_PADCLKSEL_VCLK	/* VCLK=CLKGEN1, VCLK12=CLKGEN0 */
+
+#define	CFG_DISP_PRI_LVDS_PIXEL_CLOCK			614000000/CFG_DISP_PRI_LCD_CLKGEN0_DIV
+
+#define	CFG_DISP_PRI_LVDS_OUT_SWAPRB 			CFALSE
+#define CFG_DISP_PRI_LVDS_OUT_FORMAT                 	DPC_FORMAT_RGB666
+#define CFG_DISP_PRI_LVDS_OUT_YCORDER                	DPC_YCORDER_CbYCrY
+#define CFG_DISP_PRI_LVDS_OUT_INTERLACE              	CFALSE
+#define CFG_DISP_PRI_LVDS_OUT_INVERT_FIELD           	CFALSE
 
 /*------------------------------------------------------------------------------
  * 	LVDS
@@ -149,6 +214,7 @@
 #define CFG_LCD_PRI_PWM_CH						0
 #define CFG_LCD_PRI_PWM_FREQ					30000
 #define CFG_LCD_PRI_PWM_DUTYCYCLE				50		/* (%) */
+
 
 /*------------------------------------------------------------------------------
  * 	Audio I2S (0, 1, 2)
@@ -181,9 +247,9 @@
 /*------------------------------------------------------------------------------
  * 	I2C
  */
-#define CFG_I2C0_CLK							100000
+#define CFG_I2C0_CLK							400000
 #define CFG_I2C1_CLK							200000	/* TOUCH */
-#define CFG_I2C2_CLK							200000
+#define CFG_I2C2_CLK							100000
 #define CFG_I2C3_CLK							100000
 
 /*------------------------------------------------------------------------------
@@ -218,8 +284,16 @@
  * 	Keypad
  */
 
-#define CFG_KEYPAD_KEY_BUTTON					{ PAD_GPIO_ALV + 0 }
-#define CFG_KEYPAD_KEY_CODE						{ KEY_POWER }
+#define CFG_KEYPAD_KEY_BUTTON					{ PAD_GPIO_A + 28, \
+	PAD_GPIO_B + 9, \
+	PAD_GPIO_B + 10, \
+	PAD_GPIO_B + 8, \
+	PAD_GPIO_ALV + 0 }
+#define CFG_KEYPAD_KEY_CODE						{ KEY_BACK,\
+	KEY_VOLUMEDOWN, \
+	KEY_VOLUMEUP,\
+	KEY_HOME,\
+	KEY_POWER }
 #define CFG_KEYPAD_REPEAT						CFALSE /* 0: Repeat Off 1 : Repeat On */
 
 /*------------------------------------------------------------------------------
@@ -229,25 +303,28 @@
 
 
 /*------------------------------------------------------------------------------
- * 	PMIC
+ * 	NXE2000 PMIC
  */
 /* NXE2000 PMIC	*/
-#define CFG_SW_UBC_ENABLE						(1)					/* S/W UBC Check */
-#define CFG_USB_DET_FROM_PMIC_INT				(0)					/* 0 : GPIO interrupt (CFG_GPIO_PMIC_VUSB_DET)		1 : PMIC interrupt (FVUSBDETSINT) */
-#define CFG_GPIO_OTG_USBID_DET					(PAD_GPIO_D + 16)	/* USB ID Deteict */
-#define CFG_GPIO_OTG_VBUS_DET					(PAD_GPIO_D + 21)	/* USB OTG Power Enable */
-#define CFG_GPIO_PMIC_VUSB_DET					(PAD_GPIO_ALV + 2)	/* Choice for SW_UBC or Wake-up*/
-#define CFG_GPIO_PMIC_LOWBAT_DET				(-1)					/* Critical low battery detect */
+#define CFG_SW_UBC_ENABLE						(1)
+
+/**
+ * 0 : GPIO interrupt (CFG_GPIO_PMIC_VUSB_DET)
+ * 1 : PMIC interrupt (FVUSBDETSINT)
+ */
+#define CFG_USB_DET_FROM_PMIC_INT				(0)
+
+#define CFG_GPIO_OTG_USBID_DET					(-1)
+#define CFG_GPIO_OTG_VBUS_DET					(PAD_GPIO_C + 28)
+#define CFG_GPIO_PMIC_VUSB_DET					(PAD_GPIO_ALV + 2)		/* Choice for SW_UBC or Wake-up*/
+#define CFG_GPIO_PMIC_LOWBAT_DET				(-1)//(PAD_GPIO_ALV + 3)		/* Critical low battery detect */
+#define CFG_GPIO_PMIC_INTR						(PAD_GPIO_ALV + 4)
 #define CFG_PMIC_BAT_CHG_SUPPORT				(1)
+//#define CONFIG_ENABLE_INIT_VOLTAGE				/* Enalbe init voltage for ARM, CORE */
 
-/* AXP228 PMIC	*/
-#define	CFG_PMIC_I2_CBUS						3					/* i2c channel */
-#define CFG_BATTERY_CAP							3000					/* Battery Capacity */
 
-/* PMIC Common*/
-#define CFG_GPIO_PMIC_INTR						(PAD_GPIO_ALV + 4)	/* PMIC Interrupt */
-//#define CONFIG_ENABLE_INIT_VOLTAGE					/* Enalbe init voltage for ARM, CORE */
-
+/* HDMIPHY TX Level : 0 ~ 31 */
+#define CFG_HDMIPHY_TX_LEVEL                    23
 
 /*------------------------------------------------------------------------------
  * 	Suspend mode
@@ -256,10 +333,10 @@
 /* Wakeup Source : ALIVE [0~7] */
 #define CFG_PWR_WAKEUP_SRC_ALIVE0				CTRUE					/* KEY */
 #define CFG_PWR_WAKEUP_MOD_ALIVE0				PWR_DECT_FALLINGEDGE
-#define CFG_PWR_WAKEUP_SRC_ALIVE1				CTRUE
+#define CFG_PWR_WAKEUP_SRC_ALIVE1				CFALSE
 #define CFG_PWR_WAKEUP_MOD_ALIVE1				PWR_DECT_BOTHEDGE
-#define CFG_PWR_WAKEUP_SRC_ALIVE2				CTRUE					/* PMIC - VUSB*/
-#define CFG_PWR_WAKEUP_MOD_ALIVE2				PWR_DECT_FALLINGEDGE
+#define CFG_PWR_WAKEUP_SRC_ALIVE2				CFALSE					/* PMIC - VUSB*/
+#define CFG_PWR_WAKEUP_MOD_ALIVE2				PWR_DECT_BOTHEDGE
 #define CFG_PWR_WAKEUP_SRC_ALIVE3				CFALSE					/* PMIC - CRITICAL LOW BATTERY */
 #define CFG_PWR_WAKEUP_MOD_ALIVE3				PWR_DECT_ASYNC_LOWLEVEL
 #define CFG_PWR_WAKEUP_SRC_ALIVE4				CTRUE					/* PMIC INTR */

@@ -485,6 +485,39 @@ static inline struct nxe2000_regulator *find_regulator_info(int id)
 	return NULL;
 }
 
+#if 0
+struct nxe2000_regulator_platform_data *nxe2000_regulator_pdata = NULL;
+void nxe2000_set_default_vol(int id)
+{
+	struct nxe2000_regulator_platform_data *nxe2000_pdata = NULL;
+	struct nxe2000_regulator *ri = NULL;
+
+	int ret = 0;
+	int cur_vol = 0;
+	uint8_t vsel;
+
+	if (!nxe2000_regulator_pdata)
+		return;
+
+	nxe2000_pdata = nxe2000_regulator_pdata;
+
+
+	ri = find_regulator_info(id);
+
+	vsel = ri->vout_reg_cache & ri->vout_mask;
+	cur_vol = ri->min_uV + vsel * ri->step_uV;
+
+	if(cur_vol < nxe2000_pdata->init_uV) {
+		ret = __nxe2000_set_voltage_nonlock(ri->dev, ri, nxe2000_pdata->init_uV, nxe2000_pdata->init_uV, 0, 0);
+		if (ret < 0)
+			dev_err(ri->dev, "Not able to initialize voltage %d for rail %d err %d\n", nxe2000_pdata->init_uV, ri->desc.id, ret);
+	}
+
+	return;
+}
+EXPORT_SYMBOL_GPL(nxe2000_set_default_vol);
+#endif
+
 static int nxe2000_regulator_preinit(struct device *parent,
 		struct nxe2000_regulator *ri,
 		struct nxe2000_regulator_platform_data *nxe2000_pdata)
@@ -508,7 +541,10 @@ static int nxe2000_regulator_preinit(struct device *parent,
 			nxe2000_pdata->sleep_slots, ri->desc.id, ret);
 
 #ifndef CONFIG_ENABLE_INIT_VOLTAGE
-	if(ri->id == NXE2000_ID_DC1 || ri->id == NXE2000_ID_DC2) 
+	if(ri->id == NXE2000_ID_DC1 
+		|| ri->id == NXE2000_ID_DC2
+		|| ri->id == NXE2000_ID_DC4
+		|| ri->id == NXE2000_ID_DC5)
 	{
 		return ret;
 	}
@@ -566,6 +602,11 @@ static int __devinit nxe2000_regulator_probe(struct platform_device *pdev)
 	tps_pdata = pdev->dev.platform_data;
 	ri->dev = &pdev->dev;
 
+#if 0
+	if(id == NXE2000_ID_DC1)
+		nxe2000_regulator_pdata = tps_pdata;
+#endif
+
 	nxe2000_suspend_status = 0;
 
 	err = nxe2000_cache_regulator_register(pdev->dev.parent, ri);
@@ -604,32 +645,8 @@ static int __devexit nxe2000_regulator_remove(struct platform_device *pdev)
 #ifdef CONFIG_PM
 static int nxe2000_regulator_suspend(struct device *dev)
 {
-	struct nxe2000_regulator *ri = NULL;
-	struct nxe2000_regulator_platform_data *nxe2000_pdata = dev->platform_data;
-	struct regulator_consumer_supply *consumer_supplies = nxe2000_pdata->regulator.consumer_supplies;
 
-	int ret = 0;
-	int cur_vol = 0;
-	uint8_t vsel;
-
-	nxe2000_suspend_status = 0;
-
-	if(!strcmp(consumer_supplies->supply, "vdd_arm_1.3V"))
-	{
-		ri = find_regulator_info(NXE2000_ID_DC1);
-		vsel = ri->vout_reg_cache & ri->vout_mask;
-		cur_vol = ri->min_uV + vsel * ri->step_uV;
-
-		if(cur_vol < nxe2000_pdata->init_uV)
-		{
-			ret = __nxe2000_set_voltage(dev, ri, nxe2000_pdata->init_uV, nxe2000_pdata->init_uV, 0, 0);
-			if (ret < 0) {
-				dev_err(ri->dev, "Not able to initialize voltage %d for rail %d err %d\n", nxe2000_pdata->init_uV, ri->desc.id, ret);
-				return ret;
-			}
-		}
-	}
-
+//	struct nxe2000_regulator *info = dev_get_drvdata(dev);
 	nxe2000_suspend_status = 1;
 
 	return 0;

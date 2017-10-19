@@ -646,6 +646,7 @@ static void ir_do_keydown(struct rc_dev *dev, int scancode,
 			   "key 0x%04x, scancode 0x%04x\n",
 			   dev->input_name, keycode, scancode);
 		input_report_key(dev->input_dev, keycode, 1);
+//		printk("!!!!!!!!!!!!!!!!!keycode = %d !!!!!!!!!!!!!!!\n",keycode);
 	}
 
 	input_sync(dev->input_dev);
@@ -1051,6 +1052,7 @@ int rc_register_device(struct rc_dev *dev)
 	set_bit(EV_REP, dev->input_dev->evbit);
 	set_bit(EV_MSC, dev->input_dev->evbit);
 	set_bit(MSC_SCAN, dev->input_dev->mscbit);
+	set_bit(KEY_LEFTSHIFT,dev->input_dev->keybit);
 	if (dev->open)
 		dev->input_dev->open = ir_open;
 	if (dev->close)

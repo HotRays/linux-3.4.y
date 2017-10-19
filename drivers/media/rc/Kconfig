@@ -108,6 +108,17 @@ config IR_MCE_KBD_DECODER
 	   Windows Media Center Edition, which you would like to use with
 	   a raw IR receiver in your system.
 
+config IR_AD009_DECODER
+	tristate "Enable IR raw decoder for the Ad009 protocol"
+	depends on RC_CORE
+	select BITREVERSE
+	default y
+
+	---help---
+	   Enable this option if you have an infrared remote control which
+	   uses the Ad009 protocol, and you need software decoding support.
+	   
+
 config IR_LIRC_CODEC
 	tristate "Enable IR to LIRC bridge"
 	depends on RC_CORE

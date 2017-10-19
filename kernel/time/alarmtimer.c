@@ -84,8 +84,9 @@ static int alarmtimer_rtc_add_device(struct device *dev,
 
 	if (!rtc->ops->set_alarm)
 		return -1;
-	if (!device_may_wakeup(rtc->dev.parent))
-		return -1;
+		
+//	if (!device_may_wakeup(rtc->dev.parent))
+//		return -1;
 
 	spin_lock_irqsave(&rtcdev_lock, flags);
 	if (!rtcdev) {
@@ -246,13 +247,13 @@ static int alarmtimer_suspend(struct device *dev)
 		spin_unlock_irqrestore(&base->lock, flags);
 		if (!next)
 			continue;
-		delta = ktime_sub(next->expires, base->gettime());
+		//delta = ktime_sub(next->expires, base->gettime());
+		delta = next->expires;
 		if (!min.tv64 || (delta.tv64 < min.tv64))
 			min = delta;
 	}
 	if (min.tv64 == 0)
 		return 0;
-
 	if (ktime_to_ns(min) < 2 * NSEC_PER_SEC) {
 		__pm_wakeup_event(ws, 2 * MSEC_PER_SEC);
 		return -EBUSY;
@@ -263,15 +264,23 @@ static int alarmtimer_suspend(struct device *dev)
 	rtc_read_time(rtc, &tm);
 	now = rtc_tm_to_ktime(tm);
 	now = ktime_add(now, min);
-
+	return 0;
 	/* Set alarm, if in the past reject suspend briefly to handle */
 	ret = rtc_timer_start(rtc, &rtctimer, now, ktime_set(0, 0));
 	if (ret < 0)
 		__pm_wakeup_event(ws, 1 * MSEC_PER_SEC);
 	return ret;
 }
+static int alarmtimer_resume(struct device *dev)
+{
+	return 0;
+}
 #else
 static int alarmtimer_suspend(struct device *dev)
+{
+	return 0;
+}
+static int alarmtimer_resume(struct device *dev)
 {
 	return 0;
 }
@@ -303,7 +312,7 @@ void alarm_init(struct alarm *alarm, enum alarmtimer_type type,
 {
 	timerqueue_init(&alarm->node);
 	hrtimer_init(&alarm->timer, alarm_bases[type].base_clockid,
-			HRTIMER_MODE_ABS);
+			HRTIMER_MODE_REL);
 	alarm->timer.function = alarmtimer_fired;
 	alarm->function = function;
 	alarm->type = type;
@@ -320,12 +329,18 @@ int alarm_start(struct alarm *alarm, ktime_t start)
 	struct alarm_base *base = &alarm_bases[alarm->type];
 	unsigned long flags;
 	int ret;
+	ktime_t ktm;
 
 	spin_lock_irqsave(&base->lock, flags);
+	ktm = ktime_get_boottime();
+	start = ktime_sub(start, ktm);
+	if(ktime_to_ns(start) < 0){
+		start = ktime_set(0,0);
+	}
 	alarm->node.expires = start;
 	alarmtimer_enqueue(base, alarm);
 	ret = hrtimer_start(&alarm->timer, alarm->node.expires,
-				HRTIMER_MODE_ABS);
+				HRTIMER_MODE_REL);
 	spin_unlock_irqrestore(&base->lock, flags);
 	return ret;
 }
@@ -480,7 +495,6 @@ static enum alarmtimer_restart alarm_handle_timer(struct alarm *alarm,
 static int alarm_clock_getres(const clockid_t which_clock, struct timespec *tp)
 {
 	clockid_t baseid = alarm_bases[clock2alarm(which_clock)].base_clockid;
-
 	if (!alarmtimer_get_rtcdev())
 		return -ENOTSUPP;
 
@@ -767,6 +781,7 @@ out:
 /* Suspend hook structures */
 static const struct dev_pm_ops alarmtimer_pm_ops = {
 	.suspend = alarmtimer_suspend,
+	.resume  = alarmtimer_resume,
 };
 
 static struct platform_driver alarmtimer_driver = {
@@ -834,4 +849,4 @@ out_if:
 	alarmtimer_rtc_interface_remove();
 	return error;
 }
-device_initcall(alarmtimer_init);
+late_initcall(alarmtimer_init);

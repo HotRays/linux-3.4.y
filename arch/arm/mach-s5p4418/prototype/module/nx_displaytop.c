@@ -45,8 +45,8 @@ static	struct
 
 /**
  *	@brief	Initialize of prototype enviroment & local variables.
- *	@return \b CTRUE	indicate that Initialize is successed.\n
- *			\b CFALSE	indicate that Initialize is failed.
+ *	@return  CTRUE	indicate that Initialize is successed.
+ *			 CFALSE	indicate that Initialize is failed.
  *	@see	NX_DISPLAYTOP_GetNumberOfModule
  */
 CBOOL	NX_DISPLAYTOP_Initialize( void )
@@ -84,10 +84,6 @@ U32		NX_DISPLAYTOP_GetNumberOfModule( void )
 /**
  *	@brief		Get module's physical address.
  *	@return		Module's physical address
- *	@see										NX_DISPLAYTOP_GetSizeOfRegisterSet,
- *				NX_DISPLAYTOP_SetBaseAddress,			NX_DISPLAYTOP_GetBaseAddress,
- *				NX_DISPLAYTOP_OpenModule,				NX_DISPLAYTOP_CloseModule,
- *				NX_DISPLAYTOP_CheckBusy,				NX_DISPLAYTOP_CanPowerDown
  */
 U32		NX_DISPLAYTOP_GetPhysicalAddress( void )
 {
@@ -100,10 +96,6 @@ U32		NX_DISPLAYTOP_GetPhysicalAddress( void )
 /**
  *	@brief		Get a size, in byte, of register set.
  *	@return		Size of module's register set.
- *	@see		NX_DISPLAYTOP_GetPhysicalAddress,
- *				NX_DISPLAYTOP_SetBaseAddress,			NX_DISPLAYTOP_GetBaseAddress,
- *				NX_DISPLAYTOP_OpenModule,				NX_DISPLAYTOP_CloseModule,
- *				NX_DISPLAYTOP_CheckBusy,				NX_DISPLAYTOP_CanPowerDown
  */
 U32		NX_DISPLAYTOP_GetSizeOfRegisterSet( void )
 {
@@ -115,10 +107,6 @@ U32		NX_DISPLAYTOP_GetSizeOfRegisterSet( void )
  *	@brief		Set a base address of register set.
  *	@param[in]	BaseAddress Module's base address
  *	@return		None.
- *	@see		NX_DISPLAYTOP_GetPhysicalAddress,		NX_DISPLAYTOP_GetSizeOfRegisterSet,
- *												NX_DISPLAYTOP_GetBaseAddress,
- *				NX_DISPLAYTOP_OpenModule,				NX_DISPLAYTOP_CloseModule,
- *				NX_DISPLAYTOP_CheckBusy,				NX_DISPLAYTOP_CanPowerDown
  */
 void	NX_DISPLAYTOP_SetBaseAddress( void* BaseAddress )
 {
@@ -131,10 +119,6 @@ void	NX_DISPLAYTOP_SetBaseAddress( void* BaseAddress )
 /**
  *	@brief		Get a base address of register set
  *	@return		Module's base address.
- *	@see		NX_DISPLAYTOP_GetPhysicalAddress,		NX_DISPLAYTOP_GetSizeOfRegisterSet,
- *				NX_DISPLAYTOP_SetBaseAddress,
- *				NX_DISPLAYTOP_OpenModule,				NX_DISPLAYTOP_CloseModule,
- *				NX_DISPLAYTOP_CheckBusy,				NX_DISPLAYTOP_CanPowerDown
  */
 void*	NX_DISPLAYTOP_GetBaseAddress( void )
 {
@@ -146,12 +130,8 @@ void*	NX_DISPLAYTOP_GetBaseAddress( void )
 //------------------------------------------------------------------------------
 /**
  *	@brief		Initialize selected modules with default value.
- *	@return		\b CTRUE	indicate that Initialize is successed. \n
- *				\b CFALSE	indicate that Initialize is failed.
- *	@see		NX_DISPLAYTOP_GetPhysicalAddress,		NX_DISPLAYTOP_GetSizeOfRegisterSet,
- *				NX_DISPLAYTOP_SetBaseAddress,			NX_DISPLAYTOP_GetBaseAddress,
- *												NX_DISPLAYTOP_CloseModule,
- *				NX_DISPLAYTOP_CheckBusy,				NX_DISPLAYTOP_CanPowerDown
+ *	@return		 CTRUE	indicate that Initialize is successed. 
+ *				 CFALSE	indicate that Initialize is failed.
  */
 CBOOL	NX_DISPLAYTOP_OpenModule( void )
 {
@@ -162,12 +142,8 @@ CBOOL	NX_DISPLAYTOP_OpenModule( void )
 //------------------------------------------------------------------------------
 /**
  *	@brief		Deinitialize selected module to the proper stage.
- *	@return		\b CTRUE	indicate that Deinitialize is successed. \n
- *				\b CFALSE	indicate that Deinitialize is failed.
- *	@see		NX_DISPLAYTOP_GetPhysicalAddress,		NX_DISPLAYTOP_GetSizeOfRegisterSet,
- *				NX_DISPLAYTOP_SetBaseAddress,			NX_DISPLAYTOP_GetBaseAddress,
- *				NX_DISPLAYTOP_OpenModule,
- *				NX_DISPLAYTOP_CheckBusy,				NX_DISPLAYTOP_CanPowerDown
+ *	@return		 CTRUE	indicate that Deinitialize is successed.
+ *				 CFALSE	indicate that Deinitialize is failed.
  */
 CBOOL	NX_DISPLAYTOP_CloseModule(  )
 {
@@ -179,12 +155,8 @@ CBOOL	NX_DISPLAYTOP_CloseModule(  )
 /**
  *	@name		NX_DISPLAYTOP_CheckBusy
  *	@brief		Indicates whether the selected modules is busy or not.
- *	@return		\b CTRUE	indicate that Module is Busy. \n
- *				\b CFALSE	indicate that Module is NOT Busy.
- *	@see		NX_DISPLAYTOP_GetPhysicalAddress,		NX_DISPLAYTOP_GetSizeOfRegisterSet,
- *				NX_DISPLAYTOP_SetBaseAddress,			NX_DISPLAYTOP_GetBaseAddress,
- *				NX_DISPLAYTOP_OpenModule,				NX_DISPLAYTOP_CloseModule,
- *												NX_DISPLAYTOP_CanPowerDown
+ *	@return		 CTRUE	indicate that Module is Busy. 
+ *				 CFALSE	indicate that Module is NOT Busy.
  *	@see also	Status register, SSPSR
  */
 CBOOL	NX_DISPLAYTOP_CheckBusy(  )
@@ -201,9 +173,9 @@ void	NX_DISPLAYTOP_SetRESCONVMUX( CBOOL bEnb, U32 SEL )
 	register struct NX_DISPLAYTOP_RegisterSet *pRegister;
 	U32 regvalue;
 
-	NX_ASSERT( CNULL != pRegister );
-
 	pRegister = __g_ModuleVariables.pRegister;
+
+	NX_ASSERT( CNULL != pRegister );
 
 	regvalue = (bEnb<<31) | (SEL<<0);
 	WriteIO32(&pRegister->RESCONV_MUX_CTRL, (U32)regvalue);
@@ -214,11 +186,10 @@ void	NX_DISPLAYTOP_SetHDMIMUX( CBOOL bEnb, U32 SEL )
 	register struct NX_DISPLAYTOP_RegisterSet *pRegister;
 	U32 regvalue;
 
+	pRegister = __g_ModuleVariables.pRegister;
+
 	NX_ASSERT( CNULL != pRegister );
 	NX_ASSERT( (bEnb == CTRUE) || (bEnb == CFALSE) );
-
-
-	pRegister = __g_ModuleVariables.pRegister;
 
 	regvalue = (bEnb<<31) | (SEL<<0);
 	WriteIO32(&pRegister->INTERCONV_MUX_CTRL, (U32)regvalue);
@@ -229,11 +200,10 @@ void	NX_DISPLAYTOP_SetMIPIMUX( CBOOL bEnb, U32 SEL )
 	register struct NX_DISPLAYTOP_RegisterSet *pRegister;
 	U32 regvalue;
 
+	pRegister = __g_ModuleVariables.pRegister;
+
 	NX_ASSERT( CNULL != pRegister );
 	NX_ASSERT( (bEnb == CTRUE) || (bEnb == CFALSE) );
-
-
-	pRegister = __g_ModuleVariables.pRegister;
 
 	regvalue = (bEnb<<31) | (SEL<<0);
 	WriteIO32(&pRegister->MIPI_MUX_CTRL, (U32)regvalue);
@@ -244,11 +214,10 @@ void	NX_DISPLAYTOP_SetLVDSMUX( CBOOL bEnb, U32 SEL )
 	register struct NX_DISPLAYTOP_RegisterSet *pRegister;
 	U32 regvalue;
 
+	pRegister = __g_ModuleVariables.pRegister;
+
 	NX_ASSERT( CNULL != pRegister );
 	NX_ASSERT( (bEnb == CTRUE) || (bEnb == CFALSE) );
-
-
-	pRegister = __g_ModuleVariables.pRegister;
 
 	regvalue = (bEnb<<31) | (SEL<<0);
 	WriteIO32(&pRegister->LVDS_MUX_CTRL, (U32)regvalue);
@@ -272,30 +241,30 @@ U32	NX_DISPLAYTOP_GetResetNumber ( void )
 void	NX_DISPLAYTOP_SetPrimaryMUX( U32 SEL )
 {
 	register struct NX_DISPLAYTOP_RegisterSet *pRegister;
-//	U32 regvalue;
-	NX_ASSERT( CNULL != pRegister );
+
 	pRegister = __g_ModuleVariables.pRegister;
+
+	NX_ASSERT( CNULL != pRegister );
 	WriteIO32(&pRegister->TFTMPU_MUX, (U32)SEL);
 }
-
 
 //@modified choiyk 2012-12-24 ¿ÀÀü 11:03:36
 //HDMI Sync Set.
 void	NX_DISPLAYTOP_HDMI_SetVSyncStart( U32 SEL ) // from posedge VSync
 {
 	register struct NX_DISPLAYTOP_RegisterSet *pRegister;
-//	U32 regvalue;
+	pRegister = __g_ModuleVariables.pRegister;	
+
 	NX_ASSERT( CNULL != pRegister );
-	pRegister = __g_ModuleVariables.pRegister;
 	WriteIO32(&pRegister->HDMISYNCCTRL0, (U32)SEL);
 }
 
 void	NX_DISPLAYTOP_HDMI_SetVSyncHSStartEnd( U32 Start, U32 End ) // from posedge HSync
 {
 	register struct NX_DISPLAYTOP_RegisterSet *pRegister;
-//	U32 regvalue;
+	pRegister = __g_ModuleVariables.pRegister;	
+
 	NX_ASSERT( CNULL != pRegister );
-	pRegister = __g_ModuleVariables.pRegister;
 	WriteIO32(&pRegister->HDMISYNCCTRL3, (U32)(End<<16) | (Start<<0) );
 }
 
@@ -303,18 +272,20 @@ void	NX_DISPLAYTOP_HDMI_SetVSyncHSStartEnd( U32 Start, U32 End ) // from posedge
 void	NX_DISPLAYTOP_HDMI_SetHActiveStart( U32 SEL ) // from posedge HSync
 {
 	register struct NX_DISPLAYTOP_RegisterSet *pRegister;
-//	U32 regvalue;
-	NX_ASSERT( CNULL != pRegister );
 	pRegister = __g_ModuleVariables.pRegister;
+
+	NX_ASSERT( CNULL != pRegister );
+
 	WriteIO32(&pRegister->HDMISYNCCTRL1, (U32)SEL);
 }
 
 void	NX_DISPLAYTOP_HDMI_SetHActiveEnd( U32 SEL ) // from posedge HSync
 {
 	register struct NX_DISPLAYTOP_RegisterSet *pRegister;
-//	U32 regvalue;
-	NX_ASSERT( CNULL != pRegister );
 	pRegister = __g_ModuleVariables.pRegister;
+
+	NX_ASSERT( CNULL != pRegister );
+
 	WriteIO32(&pRegister->HDMISYNCCTRL2, (U32)SEL);
 }
 

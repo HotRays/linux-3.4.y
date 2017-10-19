@@ -15,9 +15,12 @@
 
 #include <mach/ppm.h>
 
+#include <cfg_main.h>
+#include <linux/delay.h>
 #define NXP_IR_DEVICE_NAME	"nxp_ir_recv"
 #define RAW_BUFFER_SIZE 100
 
+#define CFG_PPM_CLK 4000000
 
 #define PPM_NS(x)	(1000000000/CFG_PPM_CLK*x)
 
@@ -34,6 +37,16 @@ struct nxp_rc_dev {
 };
 
 struct nxp_rc_dev *nxp_ppm_dev= NULL;
+spinlock_t ir_recv_irq_spinlock,ppm_irq_work_spinlock;
+unsigned long flags1,flags2;
+struct delayed_work enable_work;
+
+static void enable_work_func(struct work_struct *work)
+{
+	NX_PPM_SetInterruptEnableAll(0,true);
+	NX_PPM_SetPPMEnable(0, true);	
+}
+
 
 #ifdef CONFIG_PPM_SYSFS
 static ssize_t ppm_duty(struct kobject *kobj, struct kobj_attribute *attr,char *buf);
@@ -98,6 +111,7 @@ err:
 
 static void ppm_irq_work(struct work_struct *work)
 {
+	spin_lock_irqsave(&ppm_irq_work_spinlock,flags2);
 	int i=0;
 	struct nxp_rc_dev *nxp_dev = container_of(work, struct nxp_rc_dev, ppm_event_work);
 	DEFINE_IR_RAW_EVENT(ev);
@@ -116,15 +130,18 @@ static void ppm_irq_work(struct work_struct *work)
 		ev.pulse = true;//true;
 	else
 		ev.pulse = false;
-	ev.duration = PPM_NS(0xffff);//change to ns
+	ev.duration = PPM_NS(0xfff0);//change to ns
 	ir_raw_event_store(nxp_dev->rcdev, &ev);
 	ir_raw_event_handle(nxp_dev->rcdev);
 
 	nxp_dev->data.count = 0;
+	spin_unlock_irqrestore(&ppm_irq_work_spinlock,flags2);
 }
 
 static irqreturn_t nxp_ir_recv_irq(int irq, void *dev_id)
 {
+		spin_lock_irqsave(&ir_recv_irq_spinlock,flags1);
+
 	struct nxp_rc_dev *nxp_dev = dev_id;
 
 	switch(NX_PPM_GetInterruptPendingNumber(0)){
@@ -144,8 +161,11 @@ static irqreturn_t nxp_ir_recv_irq(int irq, void *dev_id)
 		break;
 
 	case NX_PPM_INT_OVERFLOW:
-		queue_work(nxp_dev->ppm_workqueue, &nxp_dev->ppm_event_work);
 		NX_PPM_ClearInterruptPending(0, NX_PPM_INT_OVERFLOW);
+		NX_PPM_SetInterruptEnableAll(0,0);
+		NX_PPM_SetPPMEnable(0, 0);
+		queue_work(nxp_dev->ppm_workqueue, &nxp_dev->ppm_event_work);
+		schedule_delayed_work(&enable_work,250);
 		break;
 
 	default:
@@ -156,6 +176,7 @@ static irqreturn_t nxp_ir_recv_irq(int irq, void *dev_id)
 	if (nxp_dev->data.count > RAW_BUFFER_SIZE)
 		nxp_dev->data.count=0;
 
+		spin_unlock_irqrestore(&ir_recv_irq_spinlock,flags1);
 	return IRQ_HANDLED;
 }
 
@@ -173,6 +194,10 @@ static int __devinit nxp_ir_recv_probe(struct platform_device *pdev)
 
 	if (!pdata)
 		return -EINVAL;
+	spin_lock_init(&ir_recv_irq_spinlock);
+	spin_lock_init(&ppm_irq_work_spinlock);
+	INIT_DELAYED_WORK(&enable_work,enable_work_func);
+
 
 	nxp_soc_peri_reset_set(RESET_ID_PPM);
    	clk = clk_get(NULL, DEV_NAME_PPM);
@@ -195,10 +220,12 @@ static int __devinit nxp_ir_recv_probe(struct platform_device *pdev)
 
 	rcdev->driver_type = RC_DRIVER_IR_RAW;
 	rcdev->allowed_protos = RC_TYPE_ALL;
+//	rcdev->allowed_protos = RC_TYPE_AD009;
 	rcdev->input_name = NXP_IR_DEVICE_NAME;
 	rcdev->input_id.bustype = BUS_HOST;
 	rcdev->driver_name = DEV_NAME_PPM;
-	rcdev->map_name = RC_MAP_NEC_TERRATEC_CINERGY_XS;
+	rcdev->map_name = RC_MAP_AD009;
+//	rcdev->map_name = RC_MAP_NEC_TERRATEC_CINERGY_XS;
 
 	nxp_dev->rcdev = rcdev;
 	nxp_dev->data.count = 0;
@@ -237,7 +264,6 @@ static int __devinit nxp_ir_recv_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	rc = sysfs_create_group(kobj, &attr_group);
 #endif
-
 	return 0;
 
 err_request_irq:
@@ -315,7 +341,9 @@ static struct platform_driver nxp_ir_recv_driver = {
 
 static int __init nxp_ir_recv_init(void)
 {
+	
 	return platform_driver_register(&nxp_ir_recv_driver);
+
 }
 module_init(nxp_ir_recv_init);
 

@@ -100,12 +100,10 @@ U32		NX_SSP_GetSizeOfRegisterSet( void )
  */
 void	NX_SSP_SetBaseAddress( U32 ModuleIndex, void* BaseAddress )
 {
-	static const U32 PhysicalAddr[] = { PHY_BASEADDR_LIST( SSP ) }; // PHY_BASEADDR_UART?_MODULE
-
 	NX_ASSERT( CNULL != BaseAddress );
 	NX_ASSERT( NUMBER_OF_SSP_MODULE > ModuleIndex );
 
-	__g_ModuleVariables[ModuleIndex].pRegister = (struct NX_SSP_RegisterSet *)PhysicalAddr[ModuleIndex];
+	__g_ModuleVariables[ModuleIndex].pRegister = (struct NX_SSP_RegisterSet *)BaseAddress;
 }
 
 //------------------------------------------------------------------------------

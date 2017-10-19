@@ -126,22 +126,22 @@ static struct platform_device *syncgen_devices[] __initdata = {
 
 static struct disp_vsync_info __lcd_vsync = {
 	/* default parameters refer to cfg_main.h */
-	#if defined(CFG_DISP_PRI_RESOL_WIDTH) && defined(CFG_DISP_PRI_RESOL_HEIGHT)
-	.h_active_len	= CFG_DISP_PRI_RESOL_WIDTH,
-	.h_sync_width	= CFG_DISP_PRI_HSYNC_SYNC_WIDTH,
-	.h_back_porch	= CFG_DISP_PRI_HSYNC_BACK_PORCH,
-	.h_front_porch	= CFG_DISP_PRI_HSYNC_FRONT_PORCH,
-	.h_sync_invert	= CFG_DISP_PRI_HSYNC_ACTIVE_HIGH,
-	.v_active_len	= CFG_DISP_PRI_RESOL_HEIGHT,
-	.v_sync_width	= CFG_DISP_PRI_VSYNC_SYNC_WIDTH,
-	.v_back_porch	= CFG_DISP_PRI_VSYNC_BACK_PORCH,
-	.v_front_porch	= CFG_DISP_PRI_VSYNC_FRONT_PORCH,
-	.v_sync_invert	= CFG_DISP_PRI_VSYNC_ACTIVE_HIGH,
-	.pixel_clock_hz	= CFG_DISP_PRI_PIXEL_CLOCK,
-	.clk_src_lv0	= CFG_DISP_PRI_CLKGEN0_SOURCE,
-	.clk_div_lv0	= CFG_DISP_PRI_CLKGEN0_DIV,
-	.clk_src_lv1	= CFG_DISP_PRI_CLKGEN1_SOURCE,
-	.clk_div_lv1	= CFG_DISP_PRI_CLKGEN1_DIV,
+	#if defined(CFG_DISP_PRI_LCD_RESOL_WIDTH) && defined(CFG_DISP_PRI_LCD_RESOL_HEIGHT)
+	.h_active_len	= CFG_DISP_PRI_LCD_RESOL_WIDTH,
+	.h_sync_width	= CFG_DISP_PRI_LCD_HSYNC_SYNC_WIDTH,
+	.h_back_porch	= CFG_DISP_PRI_LCD_HSYNC_BACK_PORCH,
+	.h_front_porch	= CFG_DISP_PRI_LCD_HSYNC_FRONT_PORCH,
+	.h_sync_invert	= CFG_DISP_PRI_LCD_HSYNC_ACTIVE_HIGH,
+	.v_active_len	= CFG_DISP_PRI_LCD_RESOL_HEIGHT,
+	.v_sync_width	= CFG_DISP_PRI_LCD_VSYNC_SYNC_WIDTH,
+	.v_back_porch	= CFG_DISP_PRI_LCD_VSYNC_BACK_PORCH,
+	.v_front_porch	= CFG_DISP_PRI_LCD_VSYNC_FRONT_PORCH,
+	.v_sync_invert	= CFG_DISP_PRI_LCD_VSYNC_ACTIVE_HIGH,
+	.pixel_clock_hz	= CFG_DISP_PRI_LCD_PIXEL_CLOCK,
+	.clk_src_lv0	= CFG_DISP_PRI_LCD_CLKGEN0_SOURCE,
+	.clk_div_lv0	= CFG_DISP_PRI_LCD_CLKGEN0_DIV,
+	.clk_src_lv1	= CFG_DISP_PRI_LCD_CLKGEN1_SOURCE,
+	.clk_div_lv1	= CFG_DISP_PRI_LCD_CLKGEN1_DIV,
 	#endif
 };
 static struct disp_lcd_param   __lcd_devpar;
@@ -181,8 +181,7 @@ static void __disp_lcd_dev_data(struct disp_vsync_info *vsync,
 	if (sgpar)
 		plcd->sync_gen = sgpar;
 
-	if (plcd->vsync && vsync)
-		*plcd->vsync = *vsync;
+	SET_VSYNC_INFO(vsync, plcd->vsync);
 }
 #else
 #define	__disp_lcd_dev_data(s, p, g)
@@ -195,22 +194,22 @@ static void __disp_lcd_dev_data(struct disp_vsync_info *vsync,
 
 static struct disp_vsync_info  __lvds_vsync = {
 	/* default parameters refer to cfg_main.h */
-	#if defined(CFG_DISP_PRI_RESOL_WIDTH) && defined(CFG_DISP_PRI_RESOL_HEIGHT)
-	.h_active_len	= CFG_DISP_PRI_RESOL_WIDTH,
-	.h_sync_width	= CFG_DISP_PRI_HSYNC_SYNC_WIDTH,
-	.h_back_porch	= CFG_DISP_PRI_HSYNC_BACK_PORCH,
-	.h_front_porch	= CFG_DISP_PRI_HSYNC_FRONT_PORCH,
-	.h_sync_invert	= CFG_DISP_PRI_HSYNC_ACTIVE_HIGH,
-	.v_active_len	= CFG_DISP_PRI_RESOL_HEIGHT,
-	.v_sync_width	= CFG_DISP_PRI_VSYNC_SYNC_WIDTH,
-	.v_back_porch	= CFG_DISP_PRI_VSYNC_BACK_PORCH,
-	.v_front_porch	= CFG_DISP_PRI_VSYNC_FRONT_PORCH,
-	.v_sync_invert	= CFG_DISP_PRI_VSYNC_ACTIVE_HIGH,
-	.pixel_clock_hz	= CFG_DISP_PRI_PIXEL_CLOCK,
-	.clk_src_lv0	= CFG_DISP_PRI_CLKGEN0_SOURCE,
-	.clk_div_lv0	= CFG_DISP_PRI_CLKGEN0_DIV,
-	.clk_src_lv1	= CFG_DISP_PRI_CLKGEN1_SOURCE,
-	.clk_div_lv1	= CFG_DISP_PRI_CLKGEN1_DIV,
+	#if defined(CFG_DISP_PRI_LVDS_RESOL_WIDTH) && defined(CFG_DISP_PRI_LVDS_RESOL_HEIGHT)
+	.h_active_len	= CFG_DISP_PRI_LVDS_RESOL_WIDTH,
+	.h_sync_width	= CFG_DISP_PRI_LVDS_HSYNC_SYNC_WIDTH,
+	.h_back_porch	= CFG_DISP_PRI_LVDS_HSYNC_BACK_PORCH,
+	.h_front_porch	= CFG_DISP_PRI_LVDS_HSYNC_FRONT_PORCH,
+	.h_sync_invert	= CFG_DISP_PRI_LVDS_HSYNC_ACTIVE_HIGH,
+	.v_active_len	= CFG_DISP_PRI_LVDS_RESOL_HEIGHT,
+	.v_sync_width	= CFG_DISP_PRI_LVDS_VSYNC_SYNC_WIDTH,
+	.v_back_porch	= CFG_DISP_PRI_LVDS_VSYNC_BACK_PORCH,
+	.v_front_porch	= CFG_DISP_PRI_LVDS_VSYNC_FRONT_PORCH,
+	.v_sync_invert	= CFG_DISP_PRI_LVDS_VSYNC_ACTIVE_HIGH,
+	.pixel_clock_hz	= CFG_DISP_PRI_LVDS_PIXEL_CLOCK,
+	.clk_src_lv0	= CFG_DISP_PRI_LVDS_CLKGEN0_SOURCE,
+	.clk_div_lv0	= CFG_DISP_PRI_LVDS_CLKGEN0_DIV,
+	.clk_src_lv1	= CFG_DISP_PRI_LVDS_CLKGEN1_SOURCE,
+	.clk_div_lv1	= CFG_DISP_PRI_LVDS_CLKGEN1_DIV,
 	#endif
 };
 static struct disp_lvds_param  __lvds_devpar = {
@@ -281,26 +280,30 @@ static void __disp_lvds_dev_data(struct disp_vsync_info *vsync,
 
 static struct disp_vsync_info  __mipi_vsync = {
 	/* default parameters refer to cfg_main.h */
-	#if defined(CFG_DISP_PRI_RESOL_WIDTH) && defined(CFG_DISP_PRI_RESOL_HEIGHT)
-	.h_active_len	= CFG_DISP_PRI_RESOL_WIDTH,
-	.h_sync_width	= CFG_DISP_PRI_HSYNC_SYNC_WIDTH,
-	.h_back_porch	= CFG_DISP_PRI_HSYNC_BACK_PORCH,
-	.h_front_porch	= CFG_DISP_PRI_HSYNC_FRONT_PORCH,
-	.h_sync_invert	= CFG_DISP_PRI_HSYNC_ACTIVE_HIGH,
-	.v_active_len	= CFG_DISP_PRI_RESOL_HEIGHT,
-	.v_sync_width	= CFG_DISP_PRI_VSYNC_SYNC_WIDTH,
-	.v_back_porch	= CFG_DISP_PRI_VSYNC_BACK_PORCH,
-	.v_front_porch	= CFG_DISP_PRI_VSYNC_FRONT_PORCH,
-	.v_sync_invert	= CFG_DISP_PRI_VSYNC_ACTIVE_HIGH,
-	.pixel_clock_hz	= CFG_DISP_PRI_PIXEL_CLOCK,
-	.clk_src_lv0	= CFG_DISP_PRI_CLKGEN0_SOURCE,
-	.clk_div_lv0	= CFG_DISP_PRI_CLKGEN0_DIV,
-	.clk_src_lv1	= CFG_DISP_PRI_CLKGEN1_SOURCE,
-	.clk_div_lv1	= CFG_DISP_PRI_CLKGEN1_DIV,
+	#if defined(CFG_DISP_PRI_LCD_RESOL_WIDTH) && defined(CFG_DISP_PRI_LCD_RESOL_HEIGHT)
+	.h_active_len	= CFG_DISP_PRI_MIPI_RESOL_WIDTH,
+	.h_sync_width	= CFG_DISP_PRI_MIPI_HSYNC_SYNC_WIDTH,
+	.h_back_porch	= CFG_DISP_PRI_MIPI_HSYNC_BACK_PORCH,
+	.h_front_porch	= CFG_DISP_PRI_MIPI_HSYNC_FRONT_PORCH,
+	.h_sync_invert	= CFG_DISP_PRI_MIPI_HSYNC_ACTIVE_HIGH,
+	.v_active_len	= CFG_DISP_PRI_MIPI_RESOL_HEIGHT,
+	.v_sync_width	= CFG_DISP_PRI_MIPI_VSYNC_SYNC_WIDTH,
+	.v_back_porch	= CFG_DISP_PRI_MIPI_VSYNC_BACK_PORCH,
+	.v_front_porch	= CFG_DISP_PRI_MIPI_VSYNC_FRONT_PORCH,
+	.v_sync_invert	= CFG_DISP_PRI_MIPI_VSYNC_ACTIVE_HIGH,
+	.pixel_clock_hz	= CFG_DISP_PRI_MIPI_PIXEL_CLOCK,
+	.clk_src_lv0	= CFG_DISP_PRI_MIPI_CLKGEN0_SOURCE,
+	.clk_div_lv0	= CFG_DISP_PRI_MIPI_CLKGEN0_DIV,
+	.clk_src_lv1	= CFG_DISP_PRI_MIPI_CLKGEN1_SOURCE,
+	.clk_div_lv1	= CFG_DISP_PRI_MIPI_CLKGEN1_DIV,
 	#endif
 };
-static struct disp_mipi_param  __mipi_devpar;
-
+static struct disp_mipi_param  __mipi_devpar = {
+	.pllpms = 0x2281,
+	.bandctl = 0x8,
+	.pllctl = 0,
+	.phyctl = 0,
+};
 static struct nxp_lcd_plat_data mipi_data = {
 	.display_in		= DISPLAY_INPUT(CONFIG_NXP_DISPLAY_MIPI_IN),
 	.display_dev	= DISP_DEVICE_MIPI,

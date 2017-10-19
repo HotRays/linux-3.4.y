@@ -38,6 +38,8 @@
 #include "usb-wwan.h"
 
 static bool debug;
+#define HW_bcdUSB 0x0110 
+#define HUAWEI_VENDOR_ID 0x12d1 
 
 void usb_wwan_dtr_rts(struct usb_serial_port *port, int on)
 {
@@ -204,7 +206,6 @@ EXPORT_SYMBOL(usb_wwan_ioctl);
 int usb_wwan_write(struct tty_struct *tty, struct usb_serial_port *port,
 		   const unsigned char *buf, int count)
 {
-	struct usb_host_endpoint *ep;
 	struct usb_wwan_port_private *portdata;
 	struct usb_wwan_intf_private *intfdata;
 	int i;
@@ -212,6 +213,7 @@ int usb_wwan_write(struct tty_struct *tty, struct usb_serial_port *port,
 	struct urb *this_urb = NULL;	/* spurious */
 	int err;
 	unsigned long flags;
+	struct usb_host_endpoint *ep;
 
 	portdata = usb_get_serial_port_data(port);
 	intfdata = port->serial->private;
@@ -244,13 +246,11 @@ int usb_wwan_write(struct tty_struct *tty, struct usb_serial_port *port,
 		memcpy(this_urb->transfer_buffer, buf, todo);
 		this_urb->transfer_buffer_length = todo;
 
-#define HUAWEI_VENDOR_ID 0x12d1
-#define HW_bcdUSB        0x0110
-		if ((HUAWEI_VENDOR_ID == port->serial->dev->descriptor.idVendor)
-				&& (HW_bcdUSB != port->serial->dev->descriptor.bcdUSB)) {
+		if((HUAWEI_VENDOR_ID == port->serial->dev->descriptor.idVendor)
+				&& (HW_bcdUSB != port->serial->dev->descriptor.bcdUSB)){
 			ep = usb_pipe_endpoint(this_urb->dev, this_urb->pipe);
-			if (ep && (0 != this_urb->transfer_buffer_length)
-					&& (0 == this_urb->transfer_buffer_length % ep->desc.wMaxPacketSize)) {
+			if((ep && (0 != this_urb->transfer_buffer_length))
+					&& (0 == this_urb->transfer_buffer_length % ep->desc.wMaxPacketSize)){
 				this_urb->transfer_flags |= URB_ZERO_PACKET;
 			}
 		}

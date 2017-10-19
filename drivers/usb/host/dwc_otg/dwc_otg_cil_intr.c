@@ -53,7 +53,7 @@
 #ifdef CONFIG_KP_AXP22
 extern int axp_otg_power_control(int enable);
 #endif
-
+extern void nxp_otgvbus_pwr_set(int enable);
 #ifdef DEBUG
 inline const char *op_state_str(dwc_otg_core_if_t * core_if)
 {
@@ -297,6 +297,7 @@ void w_conn_id_status_change(void *p)
 #elif defined(CONFIG_KP_AXP22)
 		axp_otg_power_control(0);
 #endif
+		nxp_otgvbus_pwr_set(0);
 		dwc_otg_set_prtpower(core_if, 0);
 		core_if->host_flag = 0;
 		dwc_otg_core_init(core_if);

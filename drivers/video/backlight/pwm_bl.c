@@ -33,35 +33,53 @@ struct pwm_bl_data {
 	int			(*check_fb)(struct device *, struct fb_info *);
 };
 
+static void pwm_backlight_filter(struct backlight_device *bl, bool force)
+{
+    static int old_backlight = 128;
+    struct pwm_bl_data *pb = dev_get_drvdata(&bl->dev);
+    int max = bl->props.max_brightness;
+    int brightness = 0;
+
+    if ((bl->props.brightness >= 5 && old_backlight <= 5) || force)
+    {
+        brightness = max + (brightness * (pb->period - pb->lth_brightness) / max);
+        pwm_config(pb->pwm, brightness, pb->period);
+        pwm_enable(pb->pwm);
+    }
+    old_backlight = bl->props.brightness;
+}
+
 static int pwm_backlight_update_status(struct backlight_device *bl)
 {
-	struct pwm_bl_data *pb = dev_get_drvdata(&bl->dev);
-	int brightness = bl->props.brightness;
-	int max = bl->props.max_brightness;
+    struct pwm_bl_data *pb = dev_get_drvdata(&bl->dev);
+    int brightness = bl->props.brightness;
+    int max = bl->props.max_brightness;
 
-	if (bl->props.power != FB_BLANK_UNBLANK)
-		brightness = 0;
+    if (bl->props.power != FB_BLANK_UNBLANK)
+        brightness = 0;
 
-	if (bl->props.fb_blank != FB_BLANK_UNBLANK)
-		brightness = 0;
+    if (bl->props.fb_blank != FB_BLANK_UNBLANK)
+        brightness = 0;
 
-	if (pb->notify)
-		brightness = pb->notify(pb->dev, brightness);
+    if (pb->notify)
+        brightness = pb->notify(pb->dev, brightness);
 
-	if (brightness == 0) {
-		pwm_config(pb->pwm, 0, pb->period);
-		pwm_disable(pb->pwm);
-	} else {
-		brightness = pb->lth_brightness +
-			(brightness * (pb->period - pb->lth_brightness) / max);
-		pwm_config(pb->pwm, brightness, pb->period);
-		pwm_enable(pb->pwm);
-	}
+    pwm_backlight_filter(bl, 0);
 
-	if (pb->notify_after)
-		pb->notify_after(pb->dev, brightness);
+    if (brightness == 0) {
+        pwm_config(pb->pwm, 0, pb->period);
+        pwm_disable(pb->pwm);
+    } else {
+        brightness = pb->lth_brightness +
+            (brightness * (pb->period - pb->lth_brightness) / max);
+        pwm_config(pb->pwm, brightness, pb->period);
+        pwm_enable(pb->pwm);
+    }
 
-	return 0;
+    if (pb->notify_after)
+        pb->notify_after(pb->dev, brightness);
+
+    return 0;
 }
 
 static int pwm_backlight_get_brightness(struct backlight_device *bl)
@@ -168,9 +186,8 @@ static int pwm_backlight_remove(struct platform_device *pdev)
 #ifdef CONFIG_PM
 static int pwm_backlight_suspend(struct device *dev)
 {
-	struct backlight_device *bl = dev_get_drvdata(dev);
+    struct backlight_device *bl = dev_get_drvdata(dev);
 	struct pwm_bl_data *pb = dev_get_drvdata(&bl->dev);
-
 	if (pb->notify)
 		pb->notify(pb->dev, 0);
 	pwm_config(pb->pwm, 0, pb->period);
@@ -182,10 +199,12 @@ static int pwm_backlight_suspend(struct device *dev)
 
 static int pwm_backlight_resume(struct device *dev)
 {
-	struct backlight_device *bl = dev_get_drvdata(dev);
+    struct backlight_device *bl = dev_get_drvdata(dev);
 
-	backlight_update_status(bl);
-	return 0;
+    pwm_backlight_filter(bl, 1);
+
+    backlight_update_status(bl);
+    return 0;
 }
 
 static SIMPLE_DEV_PM_OPS(pwm_backlight_pm_ops, pwm_backlight_suspend,

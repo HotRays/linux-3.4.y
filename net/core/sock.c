@@ -563,9 +563,6 @@ int sock_setsockopt(struct socket *sock, int level, int optname,
 	case SO_REUSEADDR:
 		sk->sk_reuse = valbool;
 		break;
-	case SO_REUSEPORT:
-		sk->sk_reuseport = valbool;
-		break;
 	case SO_TYPE:
 	case SO_PROTOCOL:
 	case SO_DOMAIN:
@@ -807,10 +804,6 @@ set_rcvbuf:
 		sock_valbool_flag(sk, SOCK_NOFCS, valbool);
 		break;
 
-	case SO_SELECT_ERR_QUEUE:
-		sock_valbool_flag(sk, SOCK_SELECT_ERR_QUEUE, valbool);
-		break;
-
 	default:
 		ret = -ENOPROTOOPT;
 		break;
@@ -879,10 +872,6 @@ int sock_getsockopt(struct socket *sock, int level, int optname,
 
 	case SO_REUSEADDR:
 		v.val = sk->sk_reuse;
-		break;
-
-	case SO_REUSEPORT:
-		v.val = sk->sk_reuseport;
 		break;
 
 	case SO_KEEPALIVE:
@@ -1049,15 +1038,6 @@ int sock_getsockopt(struct socket *sock, int level, int optname,
 	case SO_NOFCS:
 		v.val = !!sock_flag(sk, SOCK_NOFCS);
 		break;
-
-	case SO_BINDTODEVICE:
-		v.val = sk->sk_bound_dev_if;
-		break;
-
-	case SO_SELECT_ERR_QUEUE:
-		v.val = sock_flag(sk, SOCK_SELECT_ERR_QUEUE);
-		break;
-
 	default:
 		return -ENOPROTOOPT;
 	}

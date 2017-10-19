@@ -48,18 +48,21 @@ U32   NX_CAN_GetTEMP( U32 ModuleIndex )
 //------------------------------------------------------------------------------
 /**
  *	@brief	Initialize of prototype enviroment & local variables.
- *	@return \b CTRUE	indicate that Initialize is successed.\n
- *			\b CFALSE	indicate that Initialize is failed.
+ *	@return  CTRUE	indicate that Initialize is successed.
+ *			 CFALSE	indicate that Initialize is failed.
  *	@see	NX_CAN_GetNumberOfModule
  */
 CBOOL	NX_CAN_Initialize( void )
 {
 	static CBOOL bInit = CFALSE;
-
+    U32          i     = 0;
+    
 	if( CFALSE == bInit )
 	{
-		memset( __g_pRegister, 0, sizeof(__g_pRegister) );
-		bInit = CTRUE;
+        for(i = 0; i < NUMBER_OF_CAN_MODULE; i++)
+		    __g_pRegister[i] = CFALSE;
+
+        bInit = CTRUE;
 	}
 
 	return CTRUE;
@@ -68,9 +71,8 @@ CBOOL	NX_CAN_Initialize( void )
 //------------------------------------------------------------------------------
 /**
  *	@brief		Get number of modules in the chip.
- *	@return		Module's number. \n
+ *	@return		Module's number. 
  *				It is equal to NUMBER_OF_CAN_MODULE in <nx_chip.h>.
- *	@see		NX_CAN_Initialize
  */
 U32		NX_CAN_GetNumberOfModule( void )
 {
@@ -81,10 +83,6 @@ U32		NX_CAN_GetNumberOfModule( void )
 /**
  *	@brief		Get a size, in byte, of register set.
  *	@return		Size of module's register set.
- *	@see		NX_CAN_GetPhysicalAddress,
- *				NX_CAN_SetBaseAddress,			NX_CAN_GetBaseAddress,
- *				NX_CAN_OpenModule,				NX_CAN_CloseModule,
- *				NX_CAN_CheckBusy,
  */
 U32		NX_CAN_GetSizeOfRegisterSet( void )
 {
@@ -96,10 +94,6 @@ U32		NX_CAN_GetSizeOfRegisterSet( void )
  *	@brief		Set a base address of register set.
  *	@param[in]	BaseAddress Module's base address
  *	@return		None.
- *	@see		NX_CAN_GetPhysicalAddress,		NX_CAN_GetSizeOfRegisterSet,
- *				NX_CAN_GetBaseAddress,
- *				NX_CAN_OpenModule,				NX_CAN_CloseModule,
- *				NX_CAN_CheckBusy,
  */
 void	NX_CAN_SetBaseAddress( U32 ModuleIndex, void* BaseAddress )
 {
@@ -112,10 +106,6 @@ void	NX_CAN_SetBaseAddress( U32 ModuleIndex, void* BaseAddress )
 /**
  *	@brief		Get a base address of register set
  *	@return		Module's base address.
- *	@see		NX_CAN_GetPhysicalAddress,		NX_CAN_GetSizeOfRegisterSet,
- *				NX_CAN_SetBaseAddress,
- *				NX_CAN_OpenModule,				NX_CAN_CloseModule,
- *				NX_CAN_CheckBusy,
  */
 void*	NX_CAN_GetBaseAddress( U32 ModuleIndex )
 {
@@ -126,12 +116,8 @@ void*	NX_CAN_GetBaseAddress( U32 ModuleIndex )
 //------------------------------------------------------------------------------
 /**
  *	@brief		Get module's physical address.
- *	@return		Module's physical address. \n
+ *	@return		Module's physical address. 
  *				It is equal to PHY_BASEADDR_CAN?_MODULE in <nx_chip.h>.
- *	@see		NX_CAN_GetSizeOfRegisterSet,
- *				NX_CAN_SetBaseAddress,			NX_CAN_GetBaseAddress,
- *				NX_CAN_OpenModule,				NX_CAN_CloseModule,
- *				NX_CAN_CheckBusy,
  */
 U32		NX_CAN_GetPhysicalAddress( U32 ModuleIndex )
 {
@@ -148,12 +134,8 @@ U32		NX_CAN_GetPhysicalAddress( U32 ModuleIndex )
 //------------------------------------------------------------------------------
 /**
  *	@brief		Initialize selected modules with default value.
- *	@return		\b CTRUE	indicate that Initialize is successed. \n
- *				\b CFALSE	indicate that Initialize is failed.
- *	@see		NX_CAN_GetPhysicalAddress,		NX_CAN_GetSizeOfRegisterSet,
- *				NX_CAN_SetBaseAddress,			NX_CAN_GetBaseAddress,
- *				NX_CAN_CloseModule,
- *				NX_CAN_CheckBusy,
+ *	@return		 CTRUE	indicate that Initialize is successed. 
+ *				 CFALSE	indicate that Initialize is failed.
  */
 CBOOL	NX_CAN_OpenModule( U32 ModuleIndex )
 {
@@ -166,12 +148,8 @@ CBOOL	NX_CAN_OpenModule( U32 ModuleIndex )
 //------------------------------------------------------------------------------
 /**
  *	@brief		Deinitialize selected module to the proper stage.
- *	@return		\b CTRUE	indicate that Deinitialize is successed. \n
- *				\b CFALSE	indicate that Deinitialize is failed.
- *	@see		NX_CAN_GetPhysicalAddress,		NX_CAN_GetSizeOfRegisterSet,
- *				NX_CAN_SetBaseAddress,			NX_CAN_GetBaseAddress,
- *				NX_CAN_OpenModule,
- *				NX_CAN_CheckBusy,
+ *	@return		 CTRUE	indicate that Deinitialize is successed. 
+ *				 CFALSE	indicate that Deinitialize is failed.
  */
 CBOOL	NX_CAN_CloseModule( U32 ModuleIndex )
 {
@@ -184,11 +162,8 @@ CBOOL	NX_CAN_CloseModule( U32 ModuleIndex )
 //------------------------------------------------------------------------------
 /**
  *	@brief		Indicates whether the selected modules is busy or not.
- *	@return		\b CTRUE	indicate that Module is Busy. \n
- *				\b CFALSE	indicate that Module is NOT Busy.
- *	@see		NX_CAN_GetPhysicalAddress,		NX_CAN_GetSizeOfRegisterSet,
- *				NX_CAN_SetBaseAddress,			NX_CAN_GetBaseAddress,
- *				NX_CAN_OpenModule,				NX_CAN_CloseModule,
+ *	@return		 CTRUE	indicate that Module is Busy. 
+ *				 CFALSE	indicate that Module is NOT Busy.
  */
 CBOOL	NX_CAN_CheckBusy( U32 ModuleIndex )
 {
@@ -204,14 +179,8 @@ CBOOL	NX_CAN_CheckBusy( U32 ModuleIndex )
 //------------------------------------------------------------------------------
 /**
  *	@brief		Get module's clock index.
- *	@return		Module's clock index.\n
+ *	@return		Module's clock index.
  *				It is equal to CLOCKINDEX_OF_CAN?_MODULE in <nx_chip.h>.
- *	@see		NX_CLKGEN_SetClockDivisorEnable,
- *				NX_CLKGEN_GetClockDivisorEnable,
- *				NX_CLKGEN_SetClockSource,
- *				NX_CLKGEN_GetClockSource,
- *				NX_CLKGEN_SetClockDivisor,
- *				NX_CLKGEN_GetClockDivisor
  */
 /*
 U32 NX_CAN_GetClockNumber ( U32 ModuleIndex )
@@ -229,11 +198,8 @@ U32 NX_CAN_GetClockNumber ( U32 ModuleIndex )
 //------------------------------------------------------------------------------
 /**
  *	@brief		Get module's reset index.
- *	@return		Module's reset index.\n
+ *	@return		Module's reset index.
  *				It is equal to RESETINDEX_OF_CAN?_MODULE_i_nRST in <nx_chip.h>.
- *	@see		NX_RSTCON_Enter,
- *				NX_RSTCON_Leave,
- *				NX_RSTCON_GetStatus
  */
 /*
 U32 NX_CAN_GetResetNumber ( U32 ModuleIndex )
@@ -254,17 +220,8 @@ U32 NX_CAN_GetResetNumber ( U32 ModuleIndex )
 /**
  *	@brief		Get a interrupt number for the interrupt controller.
  *	@param[in]	ModuleIndex		an index of module.
- *	@return		A interrupt number.\n
+ *	@return		A interrupt number.
  *				It is equal to INTNUM_OF_CAN?_MODULE in <nx_chip.h>.
- *	@see		NX_CAN_SetInterruptEnable,
- *				NX_CAN_GetInterruptEnable,
- *				NX_CAN_GetInterruptPending,
- *				NX_CAN_ClearInterruptPending,
- *				NX_CAN_SetInterruptEnableAll,
- *				NX_CAN_GetInterruptEnableAll,
- *				NX_CAN_GetInterruptPendingAll,
- *				NX_CAN_ClearInterruptPendingAll,
- *				NX_CAN_GetInterruptPendingNumber
  */
 U32 	NX_CAN_GetInterruptNumber( U32 ModuleIndex )
 {
@@ -281,20 +238,11 @@ U32 	NX_CAN_GetInterruptNumber( U32 ModuleIndex )
 /**
  *	@brief		Set a specified interrupt to be enabled or disabled.
  *	@param[in]	ModuleIndex		an index of module.
- *	@param[in]	IntNum	a interrupt Number .\n
+ *	@param[in]	IntNum	a interrupt Number .
  *						refer to NX_CAN_INTCH_xxx in <nx_CAN.h>
- *	@param[in]	Enable	\b Set as CTRUE to enable a specified interrupt. \r\n
- *						\b Set as CFALSE to disable a specified interrupt.
+ *	@param[in]	Enable	 Set as CTRUE to enable a specified interrupt. 
+ *						 Set as CFALSE to disable a specified interrupt.
  *	@return		None.
- *	@see		NX_CAN_GetInterruptNumber,
- *				NX_CAN_GetInterruptEnable,
- *				NX_CAN_GetInterruptPending,
- *				NX_CAN_ClearInterruptPending,
- *				NX_CAN_SetInterruptEnableAll,
- *				NX_CAN_GetInterruptEnableAll,
- *				NX_CAN_GetInterruptPendingAll,
- *				NX_CAN_ClearInterruptPendingAll,
- *				NX_CAN_GetInterruptPendingNumber
  */
 void	NX_CAN_SetInterruptEnable( U32 ModuleIndex, U32 IntNum, CBOOL Enable )
 {
@@ -318,19 +266,10 @@ void	NX_CAN_SetInterruptEnable( U32 ModuleIndex, U32 IntNum, CBOOL Enable )
 /**
  *	@brief		Indicates whether a specified interrupt is enabled or disabled.
  *	@param[in]	ModuleIndex		an index of module.
- *	@param[in]	IntNum	a interrupt Number.\n
+ *	@param[in]	IntNum	a interrupt Number.
  *						refer to NX_CAN_INTCH_xxx in <nx_CAN.h>
- *	@return		\b CTRUE	indicates that a specified interrupt is enabled. \r\n
- *				\b CFALSE	indicates that a specified interrupt is disabled.
- *	@see		NX_CAN_GetInterruptNumber,
- *				NX_CAN_SetInterruptEnable,
- *				NX_CAN_GetInterruptPending,
- *				NX_CAN_ClearInterruptPending,
- *				NX_CAN_SetInterruptEnableAll,
- *				NX_CAN_GetInterruptEnableAll,
- *				NX_CAN_GetInterruptPendingAll,
- *				NX_CAN_ClearInterruptPendingAll,
- *				NX_CAN_GetInterruptPendingNumber
+ *	@return		 CTRUE	indicates that a specified interrupt is enabled. 
+ *				 CFALSE	indicates that a specified interrupt is disabled.
 
  */
 CBOOL	NX_CAN_GetInterruptEnable( U32 ModuleIndex, U32 IntNum )
@@ -344,19 +283,10 @@ CBOOL	NX_CAN_GetInterruptEnable( U32 ModuleIndex, U32 IntNum )
 /**
  *	@brief		Indicates whether a specified interrupt is pended or not
  *	@param[in]	ModuleIndex		an index of module.
- *	@param[in]	IntNum	a interrupt Number.\n
+ *	@param[in]	IntNum	a interrupt Number.
  *						refer to NX_CAN_INTCH_xxx in <nx_CAN.h>
- *	@return		\b CTRUE	indicates that a specified interrupt is pended. \r\n
- *				\b CFALSE	indicates that a specified interrupt is not pended.
- *	@see		NX_CAN_GetInterruptNumber,
- *				NX_CAN_SetInterruptEnable,
- *				NX_CAN_GetInterruptEnable,
- *				NX_CAN_ClearInterruptPending,
- *				NX_CAN_SetInterruptEnableAll,
- *				NX_CAN_GetInterruptEnableAll,
- *				NX_CAN_GetInterruptPendingAll,
- *				NX_CAN_ClearInterruptPendingAll,
- *				NX_CAN_GetInterruptPendingNumber
+ *	@return		 CTRUE	indicates that a specified interrupt is pended. 
+ *				 CFALSE	indicates that a specified interrupt is not pended.
 
  */
 CBOOL	NX_CAN_GetInterruptPending( U32 ModuleIndex, U32 IntNum )
@@ -375,18 +305,9 @@ CBOOL	NX_CAN_GetInterruptPending( U32 ModuleIndex, U32 IntNum )
 /**
  *	@brief		Clear a pending state of specified interrupt.
  *	@param[in]	ModuleIndex		an index of module.
- *	@param[in]	IntNum	a interrupt number.\n
+ *	@param[in]	IntNum	a interrupt number.
  *						refer to NX_CAN_INTCH_xxx in <nx_CAN.h>
  *	@return		None.
- *	@see		NX_CAN_GetInterruptNumber,
- *				NX_CAN_SetInterruptEnable,
- *				NX_CAN_GetInterruptEnable,
- *				NX_CAN_GetInterruptPending,
- *				NX_CAN_SetInterruptEnableAll,
- *				NX_CAN_GetInterruptEnableAll,
- *				NX_CAN_GetInterruptPendingAll,
- *				NX_CAN_ClearInterruptPendingAll,
- *				NX_CAN_GetInterruptPendingNumber
 
  */
 void	NX_CAN_ClearInterruptPending( U32 ModuleIndex, U32 IntNum )
@@ -402,18 +323,9 @@ void	NX_CAN_ClearInterruptPending( U32 ModuleIndex, U32 IntNum )
 /**
  *	@brief		Set all interrupts to be enabled or disabled.
  *	@param[in]	ModuleIndex		an index of module.
- *	@param[in]	Enable	\b Set as CTRUE to enable all interrupts. \r\n
- *						\b Set as CFALSE to disable all interrupts.
+ *	@param[in]	Enable	 Set as CTRUE to enable all interrupts. 
+ *						 Set as CFALSE to disable all interrupts.
  *	@return		None.
- *	@see		NX_CAN_GetInterruptNumber,
- *				NX_CAN_SetInterruptEnable,
- *				NX_CAN_GetInterruptEnable,
- *				NX_CAN_GetInterruptPending,
- *				NX_CAN_ClearInterruptPending,
- *				NX_CAN_GetInterruptEnableAll,
- *				NX_CAN_GetInterruptPendingAll,
- *				NX_CAN_ClearInterruptPendingAll,
- *				NX_CAN_GetInterruptPendingNumber
 
  */
 void	NX_CAN_SetInterruptEnableAll( U32 ModuleIndex, CBOOL Enable )
@@ -435,17 +347,9 @@ void	NX_CAN_SetInterruptEnableAll( U32 ModuleIndex, CBOOL Enable )
 /**
  *	@brief		Indicates whether some of interrupts are enabled or not.
  *	@param[in]	ModuleIndex		an index of module.
- *	@return		\b CTRUE	indicates that one or more interrupts are enabled. \r\n
- *				\b CFALSE	indicates that all interrupts are disabled.
- *	@see		NX_CAN_GetInterruptNumber,
- *				NX_CAN_SetInterruptEnable,
- *				NX_CAN_GetInterruptEnable,
- *				NX_CAN_GetInterruptPending,
- *				NX_CAN_ClearInterruptPending,
- *				NX_CAN_SetInterruptEnableAll,
- *				NX_CAN_GetInterruptPendingAll,
- *				NX_CAN_ClearInterruptPendingAll,
- *				NX_CAN_GetInterruptPendingNumber
+ *	@return		 CTRUE	indicates that one or more interrupts are enabled. 
+ *				 CFALSE	indicates that all interrupts are disabled.
+
 
  */
 CBOOL	NX_CAN_GetInterruptEnableAll( U32 ModuleIndex )
@@ -459,17 +363,9 @@ CBOOL	NX_CAN_GetInterruptEnableAll( U32 ModuleIndex )
 /**
  *	@brief		Indicates whether some of interrupts are pended or not.
  *	@param[in]	ModuleIndex		an index of module.
- *	@return		\b CTRUE	indicates that one or more interrupts are pended. \r\n
- *				\b CFALSE	indicates that no interrupt is pended.
- *	@see		NX_CAN_GetInterruptNumber,
- *				NX_CAN_SetInterruptEnable,
- *				NX_CAN_GetInterruptEnable,
- *				NX_CAN_GetInterruptPending,
- *				NX_CAN_ClearInterruptPending,
- *				NX_CAN_SetInterruptEnableAll,
- *				NX_CAN_GetInterruptEnableAll,
- *				NX_CAN_ClearInterruptPendingAll,
- *				NX_CAN_GetInterruptPendingNumber
+ *	@return		 CTRUE	indicates that one or more interrupts are pended. 
+ *				 CFALSE	indicates that no interrupt is pended.
+
 
  */
 CBOOL	NX_CAN_GetInterruptPendingAll( U32 ModuleIndex )
@@ -489,15 +385,6 @@ CBOOL	NX_CAN_GetInterruptPendingAll( U32 ModuleIndex )
  *	@brief		Clear pending state of all interrupts.
  *	@param[in]	ModuleIndex		an index of module.
  *	@return		None.
- *	@see		NX_CAN_GetInterruptNumber,
- *				NX_CAN_SetInterruptEnable,
- *				NX_CAN_GetInterruptEnable,
- *				NX_CAN_GetInterruptPending,
- *				NX_CAN_ClearInterruptPending,
- *				NX_CAN_SetInterruptEnableAll,
- *				NX_CAN_GetInterruptEnableAll,
- *				NX_CAN_GetInterruptPendingAll,
- *				NX_CAN_GetInterruptPendingNumber
 
  */
 void	NX_CAN_ClearInterruptPendingAll( U32 ModuleIndex )
@@ -513,17 +400,8 @@ void	NX_CAN_ClearInterruptPendingAll( U32 ModuleIndex )
 /**
  *	@brief		Get a interrupt number which has the most prority of pended interrupts.
  *	@param[in]	ModuleIndex		an index of module.
- *	@return		a interrupt number. A value of '-1' means that no interrupt is pended.\n
+ *	@return		a interrupt number. A value of '-1' means that no interrupt is pended.
  *				refer to NX_CAN_INTCH_xxx in <nx_CAN.h>
- *	@see		NX_CAN_GetInterruptNumber,
- *				NX_CAN_SetInterruptEnable,
- *				NX_CAN_GetInterruptEnable,
- *				NX_CAN_GetInterruptPending,
- *				NX_CAN_ClearInterruptPending,
- *				NX_CAN_SetInterruptEnableAll,
- *				NX_CAN_GetInterruptEnableAll,
- *				NX_CAN_GetInterruptPendingAll,
- *				NX_CAN_ClearInterruptPendingAll
 
  */
 S32		NX_CAN_GetInterruptPendingNumber( U32 ModuleIndex )	// -1 if None

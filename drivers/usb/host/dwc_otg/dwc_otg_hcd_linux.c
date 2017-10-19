@@ -77,7 +77,7 @@
 #ifdef CONFIG_KP_AXP22
 extern int axp_otg_power_control(int enable);
 #endif
-
+extern void nxp_otgvbus_pwr_set(int enable);
 /**
  * Gets the endpoint number from a _bEndpointAddress argument. The endpoint is
  * qualified with its direction (possible 32 endpoints per device).
@@ -354,6 +354,7 @@ static int dwc_otg_hcd_resume(struct usb_hcd *hcd)
 #elif defined(CONFIG_KP_AXP22)
 		axp_otg_power_control(0);
 #endif
+	nxp_otgvbus_pwr_set(0);
         dwc_otg_set_prtpower(core_if, 0);
 		core_if->host_flag = 0;
 		cil_pcd_start(core_if);

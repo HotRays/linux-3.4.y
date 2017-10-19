@@ -969,7 +969,7 @@ static int mma8653_axis_remap(struct i2c_client *client, struct mma8653_acc *acc
 		acc->z = -(acc->z);
 		acc->x = -(acc->x);
 	}
-
+	acc->x=-acc->x;
 	return 0;
 }
 
@@ -1233,6 +1233,7 @@ static int __init mma8653_init(void)
 	}
 
 	i2c_adap = i2c_get_adapter(cfg_i2c_adap_id);
+	printk("cfg_i2c_adap_id = %d \n",cfg_i2c_adap_id);
 	mma8653_client = i2c_new_device(i2c_adap, &mma8653_board_info);
 	i2c_put_adapter(i2c_adap);
 #endif

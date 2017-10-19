@@ -104,6 +104,7 @@ static int stmmac_probe_config_dt(struct platform_device *pdev,
 }
 #endif /* CONFIG_OF */
 
+extern int nxpmac_tx_clk_setting(void *bsp_priv, int speed);
 /**
  * stmmac_pltfr_probe
  * @pdev: platform device pointer
@@ -155,8 +156,6 @@ static int stmmac_pltfr_probe(struct platform_device *pdev)
 			pr_err("%s: main dt probe failed", __func__);
 			goto out_unmap;
 		}
-	} else if (is_valid_ether_addr(plat_dat->dev_addr)) {
-		mac = plat_dat->dev_addr;
 	}
 
 	/* Custom initialisation (if needed)*/
@@ -168,9 +167,14 @@ static int stmmac_pltfr_probe(struct platform_device *pdev)
 	}
 	#endif
 
+	#if (CONFIG_NXPMAC_TX_CLK < 4)
+	plat_dat->fix_mac_speed = nxpmac_tx_clk_setting;
+	#endif
+
 	priv = stmmac_dvr_probe(&(pdev->dev), plat_dat, addr);
 	if (!priv) {
 		pr_err("%s: main driver probe failed", __func__);
+		ret = -ENODEV;
 		goto out_unmap;
 	}
 
@@ -226,7 +230,7 @@ out_release_region:
 static int stmmac_pltfr_remove(struct platform_device *pdev)
 {
 	struct net_device *ndev = platform_get_drvdata(pdev);
-	struct stmmac_priv *priv = netdev_priv(ndev);
+	//struct stmmac_priv *priv = netdev_priv(ndev);
 	int ret = stmmac_dvr_remove(ndev);
 
 	//if (priv->plat->exit)
@@ -255,8 +259,8 @@ static int stmmac_pltfr_suspend(struct device *dev)
 static int stmmac_pltfr_resume(struct device *dev)
 {
 	struct net_device *ndev = dev_get_drvdata(dev);
-	struct stmmac_priv *priv = netdev_priv(ndev);
-	struct platform_device *pdev = to_platform_device(dev);
+	//struct stmmac_priv *priv = netdev_priv(ndev);
+	//struct platform_device *pdev = to_platform_device(dev);
 
 	//lldebugout(" +++++ plat_resume enter\n");
 

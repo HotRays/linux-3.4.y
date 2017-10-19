@@ -1618,7 +1618,7 @@ void    NX_DEINTERLACE_DeinterlaceStop( void )
 /**
  *  @brief      Set Size of Source Y Field Image
  *  @param[in]  YSrcHeight      Height  ( 0 ~ 1023 )
- *  @param[in]  YSrcWidth       Width   ( 0 ~ 1023 )
+ *  @param[in]  YSrcWidth       Width   ( 0 ~ 720   )
  *  @return     None
  *  @remarks    Each Height and Width can set maxium 10bit value.
  */
@@ -1634,8 +1634,9 @@ void    NX_DEINTERLACE_SetYSrcImageSize
     register U32    temp;
 
     NX_ASSERT( CNULL != __g_pRegister );
-    NX_ASSERT( 1024 > YSrcHeight );
-    NX_ASSERT( 1024 > YSrcWidth );
+    NX_ASSERT( 720  >= YSrcWidth );
+	NX_ASSERT( 1024 >  YSrcHeight );
+	
 
     temp = ( YSrcHeight << YHEIGHT_BITPOS ) | ( YSrcWidth << YWIDTH_BITPOS ) ;
 
@@ -1946,8 +1947,8 @@ void    NX_DEINTERLACE_SetCBSrcImageSize
     register U32    temp;
 
     NX_ASSERT( CNULL != __g_pRegister );
-    NX_ASSERT( 1024 > CBSrcHeight );
-    NX_ASSERT( 1024 > CBSrcWidth );
+    NX_ASSERT( 720  >= CBSrcWidth );
+	NX_ASSERT( 1024 >  CBSrcHeight );
 
     temp = ( CBSrcHeight << CBHEIGHT_BITPOS ) | ( CBSrcWidth << CBWIDTH_BITPOS ) ;
 
@@ -2093,7 +2094,7 @@ void    NX_DEINTERLACE_SetCBDestStride
     NX_ASSERT( CNULL != __g_pRegister );
 
     //__g_pRegister->DESTSTRD_CB =    CBDestStride;
-    WriteIO32(&__g_pRegister->DESTSTRD_CB,  CBDestStride);
+    WriteIO32(&__g_pRegister->DESTSTRD_CB,  CBDestStride);	
 }
 
 
@@ -2200,8 +2201,8 @@ void    NX_DEINTERLACE_SetCRSrcImageSize
     register U32    temp;
 
     NX_ASSERT( CNULL != __g_pRegister );
-    NX_ASSERT( 1024 > CRSrcHeight );
-    NX_ASSERT( 1024 > CRSrcWidth );
+    NX_ASSERT( 720  >= CRSrcWidth );
+	NX_ASSERT( 1024 >  CRSrcHeight );
 
     temp = ( CRSrcHeight << CRHEIGHT_BITPOS ) | ( CRSrcWidth << CRWIDTH_BITPOS ) ;
 

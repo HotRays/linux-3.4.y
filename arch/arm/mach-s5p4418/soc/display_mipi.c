@@ -21,6 +21,7 @@
 #include <linux/slab.h>
 #include <linux/sched.h>
 #include <linux/init.h>
+#include <linux/delay.h>
 #include <mach/platform.h>
 #include <linux/platform_device.h>
 
@@ -28,7 +29,7 @@
 #include <mach/soc.h>
 #include "display_4418.h"
 
-#if (0)
+#if (1)
 #define DBGOUT(msg...)		{ printk(KERN_INFO msg); }
 #else
 #define DBGOUT(msg...)		do {} while (0)
@@ -89,7 +90,7 @@ static int  mipi_prepare(struct disp_process_dev *pdev)
 	bandctl = pmipi->bandctl;
 	pllctl  = pmipi->pllctl;
 	phyctl  = pmipi->phyctl;
-
+printk("mipi prepare %x %x %x %x\n", pllpms, bandctl, pllctl,phyctl);
 	switch (input) {
 	case DISP_DEVICE_SYNCGEN0:	input = 0; break;
 	case DISP_DEVICE_SYNCGEN1:	input = 1; break;
@@ -189,10 +190,17 @@ static int  mipi_prepare(struct disp_process_dev *pdev)
 	NX_DISPLAYTOP_SetMIPIMUX(CTRUE, input);
 
 	// 0 is spdif, 1 is mipi vclk
+#if 0
 	NX_DISPTOP_CLKGEN_SetClockSource (clkid, 0, psync->clk_src_lv0);
 	NX_DISPTOP_CLKGEN_SetClockDivisor(clkid, 0, psync->clk_div_lv0);
 	NX_DISPTOP_CLKGEN_SetClockSource (clkid, 1, psync->clk_src_lv1);  // CLKSRC_PLL0
 	NX_DISPTOP_CLKGEN_SetClockDivisor(clkid, 1, psync->clk_div_lv1);
+#else
+	//NX_DISPTOP_CLKGEN_SetClockSource (clkid, 0, psync->clk_src_lv0);
+	//NX_DISPTOP_CLKGEN_SetClockDivisor(clkid, 0, psync->clk_div_lv0);
+	NX_DISPTOP_CLKGEN_SetClockSource (clkid, 1, psync->clk_src_lv0);  // CLKSRC_PLL0
+	NX_DISPTOP_CLKGEN_SetClockDivisor(clkid, 1, (psync->clk_div_lv1)*(psync->clk_div_lv0));
+#endif
 
 	return 0;
 }
@@ -203,8 +211,19 @@ static int  mipi_enable(struct disp_process_dev *pdev, int enable)
 	CBOOL on = (enable ? CTRUE : CFALSE);
 	DBGOUT("%s %s, %s\n", __func__, dev_to_str(pdev->dev_id), enable?"ON":"OFF");
 
-	if (enable)
-		mipi_prepare(pdev);
+       int enable_io = PAD_GPIO_C;
+
+       if (enable){
+	       nxp_soc_gpio_set_out_value(enable_io, 0);
+	       msleep(30);
+	       nxp_soc_gpio_set_out_value(enable_io, 1);
+	       msleep(30);
+	       mipi_prepare(pdev);
+       } else {
+	       nxp_soc_gpio_set_out_value(enable_io, 1);
+	       msleep(30);
+	       nxp_soc_gpio_set_out_value(enable_io, 0);
+       }
 
 	/* SPDIF and MIPI */
     NX_DISPTOP_CLKGEN_SetClockDivisorEnable(clkid, CTRUE);

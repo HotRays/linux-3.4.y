@@ -36,7 +36,6 @@
 #include <mach/platform.h>
 #include <mach/pm.h>
 
-#define NXE2000_PM_RESTART		(0)
 
 static struct i2c_client *nxe2000_i2c_client;
 
@@ -164,6 +163,7 @@ int nxe2000_write_bank1(struct device *dev, u8 reg, uint8_t val)
 		ret = __nxe2000_write(to_i2c_client(dev), reg, val);
 	mutex_unlock(&nxe2000->io_lock);
 
+	ret = set_bank_nxe2000(dev, 0);
 	return ret;
 }
 EXPORT_SYMBOL_GPL(nxe2000_write_bank1);
@@ -194,6 +194,7 @@ int nxe2000_bulk_writes_bank1(struct device *dev, u8 reg, u8 len, uint8_t *val)
 		ret = __nxe2000_bulk_writes(to_i2c_client(dev), reg, len, val);
 	mutex_unlock(&nxe2000->io_lock);
 
+	ret = set_bank_nxe2000(dev, 0);
 	return ret;
 }
 EXPORT_SYMBOL_GPL(nxe2000_bulk_writes_bank1);
@@ -234,6 +235,7 @@ int nxe2000_read_bank1(struct device *dev, u8 reg, uint8_t *val)
 		ret =  __nxe2000_read(to_i2c_client(dev), reg, val);
 	mutex_unlock(&nxe2000->io_lock);
 
+	ret = set_bank_nxe2000(dev, 0);
 	return ret;
 }
 EXPORT_SYMBOL_GPL(nxe2000_read_bank1);
@@ -264,6 +266,7 @@ int nxe2000_bulk_reads_bank1(struct device *dev, u8 reg, u8 len, uint8_t *val)
 		ret = __nxe2000_bulk_reads(to_i2c_client(dev), reg, len, val);
 	mutex_unlock(&nxe2000->io_lock);
 
+	ret = set_bank_nxe2000(dev, 0);
 	return ret;
 }
 EXPORT_SYMBOL_GPL(nxe2000_bulk_reads_bank1);
@@ -361,158 +364,10 @@ int nxe2000_update_bank1(struct device *dev, u8 reg, uint8_t val, uint8_t mask)
 		}
 	}
 out:
+	ret = set_bank_nxe2000(dev, 0);
 	mutex_unlock(&nxe2000->io_lock);
 	return ret;
 }
-
-//extern void (*pm_power_off)(void);
-//static void (*backup_pm_power_off)(void);
-
-#if (NXE2000_PM_RESTART == 1)
-extern void (*arm_pm_restart)(char str, const char *cmd);
-static void (*backup_pm_restart)(char str, const char *cmd);
-#endif
-void nxe2000_power_off(void)
-{
-	int ret;
-	uint8_t reg_val = 0;
-
-	if (!nxe2000_i2c_client)
-		return;
-
-#if defined(CONFIG_BATTERY_NXE2000)
-	reg_val = g_soc;
-	reg_val &= 0x7f;
-
-	ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PSWR, reg_val);
-	if (ret < 0)
-		dev_err(&nxe2000_i2c_client->dev, 
-					"Error in writing PSWR_REG\n");
-
-	if (g_fg_on_mode == 0) {
-		/* Clear NXE2000_FG_CTRL 0x01 bit */
-		ret = nxe2000_read(&nxe2000_i2c_client->dev,
-						NXE2000_FG_CTRL, &reg_val);
-		if (reg_val & 0x01) {
-			reg_val &= ~0x01;
-			ret = nxe2000_write(&nxe2000_i2c_client->dev,
-						NXE2000_FG_CTRL, reg_val);
-		}
-		if (ret < 0)
-			dev_err(&nxe2000_i2c_client->dev, 
-					"Error in writing FG_CTRL\n");
-	}
-#endif
-
-	/* set rapid timer 300 min */
-	ret = nxe2000_read(&nxe2000_i2c_client->dev,
-						TIMSET_REG, &reg_val);
-	if (ret < 0)
-		ret = nxe2000_read(&nxe2000_i2c_client->dev,
-							TIMSET_REG, &reg_val);
-
-	reg_val |= 0x03;
-
-	ret = nxe2000_write(&nxe2000_i2c_client->dev,
-						TIMSET_REG, reg_val);
-	if (ret < 0)
-		ret = nxe2000_write(&nxe2000_i2c_client->dev,
-							TIMSET_REG, reg_val);
-	if (ret < 0)
-		dev_err(&nxe2000_i2c_client->dev, 
-				"Error in writing the TIMSET_Reg\n");
-
-	/* Disable all Interrupt */
-	ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_INTC_INTEN, 0);
-	if (ret < 0)
-		ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_INTC_INTEN, 0);
-
-	/* Not repeat power ON after power off(Power Off/N_OE) */
-	ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PWR_REP_CNT, 0x0);
-	if (ret < 0)
-		ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PWR_REP_CNT, 0x0);
-
-	/* Power OFF */
-	ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PWR_SLP_CNT, 0x1);
-	if (ret < 0)
-		ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PWR_SLP_CNT, 0x1);
-
-	//if (backup_pm_power_off)
-	//	backup_pm_power_off();
-	//halt();
-}
-
-#if (NXE2000_PM_RESTART == 1)
-void nxe2000_restart(char str, const char *cmd)
-{
-	int ret;
-	uint8_t reg_val = 0;
-
-	if (!nxe2000_i2c_client)
-		return;
-
-#if defined(CONFIG_BATTERY_NXE2000)
-	reg_val = g_soc;
-	reg_val &= 0x7f;
-
-	ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PSWR, reg_val);
-	if (ret < 0)
-		dev_err(&nxe2000_i2c_client->dev, 
-					"Error in writing PSWR_REG\n");
-
-	if (g_fg_on_mode == 0) {
-		/* Clear NXE2000_FG_CTRL 0x01 bit */
-		ret = nxe2000_read(&nxe2000_i2c_client->dev,
-						NXE2000_FG_CTRL, &reg_val);
-		if (reg_val & 0x01) {
-			reg_val &= ~0x01;
-			ret = nxe2000_write(&nxe2000_i2c_client->dev,
-						NXE2000_FG_CTRL, reg_val);
-		}
-		if (ret < 0)
-			dev_err(&nxe2000_i2c_client->dev, 
-					"Error in writing FG_CTRL\n");
-	}
-#endif
-
-	/* set rapid timer 300 min */
-	ret = nxe2000_read(&nxe2000_i2c_client->dev,
-						TIMSET_REG, &reg_val);
-	if (ret < 0)
-		ret = nxe2000_read(&nxe2000_i2c_client->dev,
-							TIMSET_REG, &reg_val);
-
-	reg_val |= 0x03;
-
-	ret = nxe2000_write(&nxe2000_i2c_client->dev,
-						TIMSET_REG, reg_val);
-	if (ret < 0)
-		ret = nxe2000_write(&nxe2000_i2c_client->dev,
-							TIMSET_REG, reg_val);
-	if (ret < 0)
-		dev_err(&nxe2000_i2c_client->dev, 
-				"Error in writing the TIMSET_Reg\n");
-
-	/* Disable all Interrupt */
-	ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_INTC_INTEN, 0);
-	if (ret < 0)
-		ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_INTC_INTEN, 0);
-
-	/* Not repeat power ON after power off(Power Off/N_OE) */
-	reg_val = (0x1<<1) | 1;
-	ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PWR_REP_CNT, reg_val);
-	if (ret < 0)
-		ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PWR_REP_CNT, reg_val);
-
-	/* Power OFF */
-	ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PWR_SLP_CNT, 0x1);
-	if (ret < 0)
-		ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PWR_SLP_CNT, 0x1);
-
-	if (backup_pm_restart)
-		backup_pm_restart(str, cmd);
-}
-#endif	/* #if (NXE2000_PM_RESTART == 1) */
 
 #ifdef CONFIG_NXE2000_WDG_TEST
 static irqreturn_t nxe2000_watchdog_isr(int irq, void *data)
@@ -539,7 +394,7 @@ static void nxe2000_watchdog_init(struct nxe2000 *nxe2000)
 	return;
 }
 #endif
-
+#if 0
 static int nxe2000_gpio_get(struct gpio_chip *gc, unsigned offset)
 {
 	struct nxe2000 *nxe2000 = container_of(gc, struct nxe2000,
@@ -669,7 +524,7 @@ static void nxe2000_gpio_init(struct nxe2000 *nxe2000,
 	if (ret)
 		dev_warn(nxe2000->dev, "GPIO registration failed: %d\n", ret);
 }
-
+#endif
 static int nxe2000_remove_subdev(struct device *dev, void *unused)
 {
 	platform_device_unregister(to_platform_device(dev));
@@ -766,43 +621,6 @@ static void nxe2000_debuginit(struct nxe2000 *nxe2000)
 	(void)debugfs_create_file("nxe2000", S_IRUGO, NULL,
 			nxe2000, &debug_fops);
 }
-#else
-static void print_regs(const char *header, struct i2c_client *client,
-		int start_offset, int end_offset)
-{
-	uint8_t reg_val;
-	int i;
-	int ret;
-
-	printk(KERN_INFO "%s\n", header);
-	for (i = start_offset; i <= end_offset; ++i) {
-		ret = __nxe2000_read(client, i, &reg_val);
-		if (ret >= 0)
-			printk(KERN_INFO "Reg 0x%02x Value 0x%02x\n",
-							 i, reg_val);
-	}
-	printk(KERN_INFO "------------------\n");
-}
-static void nxe2000_debuginit(struct nxe2000 *nxe2000)
-{
-	struct i2c_client *client = nxe2000->client;
-
-	printk(KERN_INFO "NXE2000 Registers\n");
-	printk(KERN_INFO "------------------\n");
-
-	print_regs("System Regs",		client, 0x0, 0x05);
-	print_regs("Power Control Regs",	client, 0x07, 0x2B);
-	print_regs("DCDC  Regs",		client, 0x2C, 0x43);
-	print_regs("LDO   Regs",		client, 0x44, 0x5C);
-	print_regs("ADC   Regs",		client, 0x64, 0x8F);
-	print_regs("GPIO  Regs",		client, 0x90, 0x9B);
-	print_regs("INTC  Regs",		client, 0x9C, 0x9E);
-	print_regs("OPT   Regs",		client, 0xB0, 0xB1);
-	print_regs("CHG   Regs",		client, 0xB2, 0xDF);
-	print_regs("FUEL  Regs",		client, 0xE0, 0xFC);
-
-	return 0;
-}
 #endif
 
 static void nxe2000_noe_init(struct nxe2000 *nxe2000)
@@ -815,6 +633,90 @@ static void nxe2000_noe_init(struct nxe2000 *nxe2000)
 	/* Repeat power ON after reset (Power Off/N_OE) */
 	__nxe2000_write(client, NXE2000_PWR_REP_CNT, 0x1);
 #endif
+}
+
+#if 0
+extern void (*nxp_board_reset)(char str, const char *cmd);
+static void (*backup_nxp_board_reset)(char str, const char *cmd);
+extern void nxe2000_set_default_vol(int id);
+
+void nxe2000_restart(char str, const char *cmd)
+{
+	nxe2000_set_default_vol(0);
+
+	if (backup_nxp_board_reset)
+		backup_nxp_board_reset(str, cmd);
+}
+#endif
+
+void nxe2000_power_off(void)
+{
+	int ret;
+	uint8_t reg_val = 0;
+
+	if (!nxe2000_i2c_client)
+		return;
+
+#if defined(CONFIG_BATTERY_NXE2000)
+	reg_val = g_soc;
+	reg_val &= 0x7f;
+
+	ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PSWR, reg_val);
+	if (ret < 0)
+		dev_err(&nxe2000_i2c_client->dev, 
+					"Error in writing PSWR_REG\n");
+
+	if (g_fg_on_mode == 0) {
+		/* Clear NXE2000_FG_CTRL 0x01 bit */
+		ret = nxe2000_read(&nxe2000_i2c_client->dev,
+						NXE2000_FG_CTRL, &reg_val);
+		if (reg_val & 0x01) {
+			reg_val &= ~0x01;
+			ret = nxe2000_write(&nxe2000_i2c_client->dev,
+						NXE2000_FG_CTRL, reg_val);
+		}
+		if (ret < 0)
+			dev_err(&nxe2000_i2c_client->dev, 
+					"Error in writing FG_CTRL\n");
+	}
+#endif
+
+	/* set rapid timer 300 min */
+	ret = nxe2000_read(&nxe2000_i2c_client->dev,
+						TIMSET_REG, &reg_val);
+	if (ret < 0)
+		ret = nxe2000_read(&nxe2000_i2c_client->dev,
+							TIMSET_REG, &reg_val);
+
+	reg_val |= 0x03;
+
+	ret = nxe2000_write(&nxe2000_i2c_client->dev,
+						TIMSET_REG, reg_val);
+	if (ret < 0)
+		ret = nxe2000_write(&nxe2000_i2c_client->dev,
+							TIMSET_REG, reg_val);
+	if (ret < 0)
+		dev_err(&nxe2000_i2c_client->dev, 
+				"Error in writing the TIMSET_Reg\n");
+
+	/* Disable all Interrupt */
+	ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_INTC_INTEN, 0);
+	if (ret < 0)
+		ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_INTC_INTEN, 0);
+
+	/* Not repeat power ON after power off(Power Off/N_OE) */
+	ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PWR_REP_CNT, 0x0);
+	if (ret < 0)
+		ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PWR_REP_CNT, 0x0);
+
+	/* Power OFF */
+	ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PWR_SLP_CNT, 0x1);
+	if (ret < 0)
+		ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_PWR_SLP_CNT, 0x1);
+
+	//if (backup_pm_power_off)
+	//	backup_pm_power_off();
+	//halt();
 }
 
 static int nxe2000_i2c_probe(struct i2c_client *client,
@@ -858,10 +760,13 @@ static int nxe2000_i2c_probe(struct i2c_client *client,
 	}
 
 	nxe2000_noe_init(nxe2000);
-
+#if 0
 	nxe2000_gpio_init(nxe2000, pdata);
+#endif
 
+#ifdef CONFIG_DEBUG_FS
 	nxe2000_debuginit(nxe2000);
+#endif
 
 #ifdef CONFIG_NXE2000_WDG_TEST
 	nxe2000_watchdog_init(nxe2000);
@@ -869,13 +774,14 @@ static int nxe2000_i2c_probe(struct i2c_client *client,
 
 	nxe2000_i2c_client = client;
 
-	//backup_pm_power_off = pm_power_off;
-	//pm_power_off = nxe2000_power_off;
 	nxp_board_shutdown = nxe2000_power_off;
 
-#if (NXE2000_PM_RESTART == 1)
-	backup_pm_restart = arm_pm_restart;
-	arm_pm_restart = nxe2000_restart;
+#if 0
+	if(nxp_board_reset)
+		backup_nxp_board_reset = nxp_board_reset;
+	else
+		backup_nxp_board_reset = NULL;
+	nxp_board_reset = nxe2000_restart;
 #endif
 
 	return 0;
@@ -900,6 +806,11 @@ static int  __devexit nxe2000_i2c_remove(struct i2c_client *client)
 		nxe2000_irq_exit(nxe2000);
 
 	nxe2000_remove_subdevs(nxe2000);
+
+	cancel_delayed_work(&nxe2000->dcdc_int_work);
+	flush_workqueue(nxe2000->workqueue);
+	destroy_workqueue(nxe2000->workqueue);
+
 	kfree(nxe2000);
 	return 0;
 }

@@ -62,7 +62,7 @@ extern void nxp_cpu_id_string(u32 string[12]);
  *	=============================================================================
  */
 
-#define	FREQ_MAX_FREQ_KHZ	(1400*1000)
+#define	FREQ_MAX_FREQ_KHZ	(1000*1000)
 #define	FREQ_ARRAY_SIZE		(13)
 #define	UV(v)				(v*1000)
 

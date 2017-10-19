@@ -31,7 +31,7 @@ CBOOL	NX_CLKGEN_Initialize( void )
 	{
 		for( i=0; i < NUMBER_OF_CLKGEN_MODULE; i++ )
 		{
-			__g_ModuleVariables[i] = CNULL;
+			__g_ModuleVariables[i] = (struct NX_CLKGEN_RegisterSet*)CNULL;
 		}
 
 		bInit = CTRUE;
@@ -468,5 +468,59 @@ CBOOL		NX_CLKGEN_GetInputInv( U32 ModuleIndex, U32 Index )
 	NX_ASSERT( CNULL != __g_pRegister );
 
 	return (CBOOL)((ReadIO32(&__g_pRegister->CLKENB) & INCLKINV_MASK ) >> INCLKINV_POS);
+}
+
+void		NX_CLKGEN_SetClockOutShift( U32 ModuleIndex, CBOOL OutClkSft )
+{
+	const U32 OUTCLKSFT_POS	=	0;
+	const U32 OUTCLKSFT_MASK	=	1UL << OUTCLKSFT_POS;
+
+	register U32 ReadValue;
+
+	NX_ASSERT( CNULL != __g_ModuleVariables[ModuleIndex] );
+
+	ReadValue	=	__g_ModuleVariables[ModuleIndex]->CLKGEN[0];
+
+	ReadValue	&=	~OUTCLKSFT_MASK;
+	ReadValue	|=	OutClkSft << OUTCLKSFT_POS;
+
+	WriteIO32(&__g_ModuleVariables[ModuleIndex]->CLKGEN[0], ReadValue);
+}
+
+CBOOL		NX_CLKGEN_GetClockOutShift( U32 ModuleIndex )
+{
+	const U32 OUTCLKSFT_POS		=	0;
+	const U32 OUTCLKSFT_MASK	=	1UL << OUTCLKSFT_POS;
+
+	NX_ASSERT( CNULL != __g_ModuleVariables[ModuleIndex] );
+
+	return (CBOOL)((__g_ModuleVariables[ModuleIndex]->CLKGEN[0] & OUTCLKSFT_MASK ) >> OUTCLKSFT_POS);
+}
+
+void		NX_CLKGEN_SetClockOutDelay( U32 ModuleIndex, U32 OutClkDelay )
+{
+	const U32 OUTCLKDLY_POS	=	0;
+	const U32 OUTCLKDLY_MASK	=	0x1FUL << OUTCLKDLY_POS;
+
+	register U32 ReadValue;
+
+	NX_ASSERT( CNULL != __g_ModuleVariables[ModuleIndex] );
+
+	ReadValue	=	__g_ModuleVariables[ModuleIndex]->CLKGEN[1];
+
+	ReadValue	&=	~OUTCLKDLY_MASK;
+	ReadValue	|=	OutClkDelay << OUTCLKDLY_POS;
+
+	WriteIO32(&__g_ModuleVariables[ModuleIndex]->CLKGEN[1], ReadValue);
+}
+
+U32			NX_CLKGEN_GetClockOutDelay( U32 ModuleIndex )
+{
+	const U32 OUTCLKDLY_POS		=	0;
+	const U32 OUTCLKDLY_MASK	=	0x1FUL << OUTCLKDLY_POS;
+
+	NX_ASSERT( CNULL != __g_ModuleVariables[ModuleIndex] );
+
+	return (CBOOL)((__g_ModuleVariables[ModuleIndex]->CLKGEN[1] & OUTCLKDLY_MASK ) >> OUTCLKDLY_POS);
 }
 

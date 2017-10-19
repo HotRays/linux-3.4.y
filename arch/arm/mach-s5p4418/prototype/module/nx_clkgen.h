@@ -77,6 +77,10 @@ extern "C"
 	CBOOL		NX_CLKGEN_SetInputInv( U32 ModuleIndex, U32 Index, CBOOL OutClkInv );
 	CBOOL		NX_CLKGEN_GetInputInv( U32 ModuleIndex, U32 Index );
 
+	void		NX_CLKGEN_SetClockOutShift( U32 ModuleIndex, CBOOL OutClkSft );
+	CBOOL		NX_CLKGEN_GetClockOutShift( U32 ModuleIndex );
+	void		NX_CLKGEN_SetClockOutDelay( U32 ModuleIndex, U32 OutClkDelay );
+	U32			NX_CLKGEN_GetClockOutDelay( U32 ModuleIndex );
 
 
 #ifdef	__cplusplus

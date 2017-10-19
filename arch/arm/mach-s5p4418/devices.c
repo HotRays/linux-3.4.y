@@ -838,7 +838,7 @@ static void spi_init(int ch)
 #if defined(CONFIG_SPI_PL022_PORT0)
 static struct pl022_ssp_controller ssp0_platform_data = {
 	.bus_id         = 0,
-	.num_chipselect = 3,
+    .num_chipselect = 1,
 #if defined(CONFIG_USE_DMA_PORT0) && defined(CONFIG_AMBA_PL08X)
 	.enable_dma     = 1,
 	.dma_filter     = pl08x_filter_id,
@@ -1337,7 +1337,35 @@ struct platform_device nxp_device_wdt = {
 	.resource       = nxp_wdt_resource,
 };
 #endif
+int screen_type = 0;
+static int __init lcd_type(char *str)
+{
+	if(strcmp(str, "lcd7") == 0){
+		screen_type = 0;
+	} else if(strcmp(str, "lvds10") == 0){
+		screen_type = 1;
+	} else if(strcmp(str, "mipi7") == 0){
+		screen_type = 2;
+	}
+	return 0;
+}
+__setup("lcd=",lcd_type);
 
+int sscreen_type = 2;
+static int __init slcd_type(char *str)
+{
+	if(strcmp(str, "lcd7") == 0){
+		sscreen_type = 0;
+	} else if(strcmp(str, "lvds10") == 0){
+		sscreen_type = 1;
+	} else if(strcmp(str, "hdmi") == 0){
+		sscreen_type = 2;
+	} else if(strcmp(str, "mipi") == 0){
+		sscreen_type = 3;
+	}
+	return 0;
+}
+__setup("slcd=",slcd_type);
 /*------------------------------------------------------------------------------
  * register cpu platform devices
  */
@@ -1382,8 +1410,35 @@ void __init nxp_cpu_devices_register(void)
 #endif
 
 #if defined(CONFIG_NXP_DISPLAY_LCD)
-	printk("mach: add device lcd \n");
-	platform_device_register(&lcd_device);
+	if(sscreen_type == 1){
+		printk("mach: add device lvds \n");
+		lvds_data.display_in = DISPLAY_INPUT(1);
+		platform_device_register(&lvds_device);
+	} else if(sscreen_type == 2){
+		/* hdmi */
+		;
+	} else if(sscreen_type == 3){
+		printk("mach: add device mipi \n");
+		mipi_data.display_in = DISPLAY_INPUT(1);
+		platform_device_register(&mipi_device);
+	} else if(sscreen_type == 0){
+		printk("mach: add device lcd \n");
+		lcd_data.display_in = DISPLAY_INPUT(1);
+		platform_device_register(&lcd_device);
+	}
+
+	if(screen_type == 1){
+		printk("mach: add device lvds \n");
+		lvds_data.display_in = DISPLAY_INPUT(0);
+		platform_device_register(&lvds_device);
+	} else if(screen_type == 2){
+		printk("mach: add device mipi \n");
+		platform_device_register(&mipi_device);
+	} else if(screen_type == 0){
+		printk("mach: add device lcd \n");
+		lcd_data.display_in = DISPLAY_INPUT(0);
+		platform_device_register(&lcd_device);
+	}
 #endif
 
 #if defined(CONFIG_NXP_DISPLAY_LVDS)

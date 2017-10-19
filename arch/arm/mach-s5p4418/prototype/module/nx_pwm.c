@@ -229,12 +229,14 @@ U32 NX_PWM_GetResetNumber ( U32 ModuleIndex )
  */
 U32		NX_PWM_GetInterruptNumber( U32 ModuleIndex, U32 Channel )
 {
-	const U32	PWMInterruptNumber[][4] =
+	const U32	PWMInterruptNumber[NUMBER_OF_PWM_MODULE][4] =
 				{
-					{ INTNUM_WITH_CHANNEL_LIST(PWM,INT0) },
-					{ INTNUM_WITH_CHANNEL_LIST(PWM,INT1) },
-					{ INTNUM_WITH_CHANNEL_LIST(PWM,INT2) },
-					{ INTNUM_WITH_CHANNEL_LIST(PWM,INT3) },
+					{
+						INTNUM_WITH_CHANNEL_LIST(PWM,INT0),
+						INTNUM_WITH_CHANNEL_LIST(PWM,INT1),
+						INTNUM_WITH_CHANNEL_LIST(PWM,INT2),
+						INTNUM_WITH_CHANNEL_LIST(PWM,INT3),
+					}
 				};
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > ModuleIndex );
@@ -256,7 +258,8 @@ void	NX_PWM_SetInterruptEnable( U32 ModuleIndex, U32 IntNum, CBOOL Enable )
 {
 	register struct NX_PWM_RegisterSet*	pRegister;
 	register U32	ReadValue;
-	const U32		PWM_ENB_MASK	=	0x1f;
+	const U32		PEND_POS	=	0;
+	const U32		PEND_MASK	=	1UL << (PEND_POS + IntNum);
 	
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > ModuleIndex );
 	NX_ASSERT( NUMBER_OF_PWM_CHANNEL > IntNum );
@@ -266,10 +269,9 @@ void	NX_PWM_SetInterruptEnable( U32 ModuleIndex, U32 IntNum, CBOOL Enable )
 
 	NX_ASSERT( CNULL != pRegister );
 
-	ReadValue	=	ReadIO32(&pRegister->TINT_CSTAT) & PWM_ENB_MASK;
-
-	ReadValue	&=	(U32)(~(1UL << IntNum));
-	ReadValue	|=	(U32)Enable << IntNum ;
+	ReadValue	=	ReadIO32(&pRegister->TINT_CSTAT);
+	ReadValue	&=	(U32)(~PEND_MASK);
+	ReadValue	|=	(U32)Enable << (PEND_POS + IntNum) ;
 
 	WriteIO32(&pRegister->TINT_CSTAT, ReadValue);
 }
@@ -330,8 +332,8 @@ void	NX_PWM_ClearInterruptPending( U32 ModuleIndex, U32 IntNum )
 {
 	register struct NX_PWM_RegisterSet*	pRegister;
 	const U32	PEND_POS	=	5;
-	const U32	PEND_MASK	=	0x1f;
-	register U32 PendEnb;
+	const U32	PEND_MASK	=	1UL << (PEND_POS + IntNum);
+	register U32 ReadValue;
 
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > ModuleIndex );
@@ -341,10 +343,11 @@ void	NX_PWM_ClearInterruptPending( U32 ModuleIndex, U32 IntNum )
 
 	NX_ASSERT( CNULL != pRegister );
 
-	PendEnb	=	ReadIO32(&pRegister->TINT_CSTAT) & PEND_MASK;
-	PendEnb |=	1UL<<(IntNum+PEND_POS);
+	ReadValue	 =	ReadIO32(&pRegister->TINT_CSTAT);
+	ReadValue 	&=  ~PEND_MASK;
+	ReadValue 	|=	PEND_MASK;
 
-	WriteIO32(&pRegister->TINT_CSTAT, PendEnb );
+	WriteIO32(&pRegister->TINT_CSTAT, ReadValue );
 }
 
 //------------------------------------------------------------------------------
@@ -594,7 +597,7 @@ U32		NX_PWM_GetDeadZoneLength(U32 Channel)
 
 	NX_ASSERT( CNULL != pRegister );
 
-	return (U32)(ReadIO32(&pRegister->TCFG0)>>16)&0xFF;
+	return (U32)((ReadIO32(&pRegister->TCFG0)>>DEADZ_POS) & DEADZ_MASK);
 }
 
 //------------------------------------------------------------------------------
@@ -668,25 +671,24 @@ CBOOL	NX_PWM_GetDeadZoneEnable(U32 Channel)
 CBOOL	NX_PWM_SetDividerPath(U32 Channel, NX_PWM_DIVIDSELECT divider)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel, RegValue, updatevalue;
+	register U32 ModuleChannel, RegValue, updatevalue;
 	const U32	DIV_MASK	=	0xF;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
-	modulechannel = Channel%NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 	NX_ASSERT( NX_PWM_DIVIDSELECT_TCLK >= divider );
 
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 
 	NX_ASSERT( CNULL != pRegister );
 
-
-	if(modulechannel == 4 && NX_PWM_DIVIDSELECT_TCLK == divider)
+	if(ModuleChannel == 4 && NX_PWM_DIVIDSELECT_TCLK == divider)
 		return CFALSE;
 
-	updatevalue = divider<<(4*modulechannel);
+	updatevalue = divider<<(4*ModuleChannel);
 
 	RegValue = ReadIO32(&pRegister->TCFG1);
-	RegValue &= ~(DIV_MASK<<modulechannel);
+	RegValue &= ~(DIV_MASK<<(4*ModuleChannel));
 	RegValue |= updatevalue;
 	WriteIO32(&pRegister->TCFG1, RegValue);
 
@@ -701,7 +703,7 @@ CBOOL	NX_PWM_SetDividerPath(U32 Channel, NX_PWM_DIVIDSELECT divider)
 NX_PWM_DIVIDSELECT NX_PWM_GetDividerPath(U32 Channel)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel, RegValue;
+	register U32 ModuleChannel, RegValue;
 	const U32	DIV_MASK	=	0xF;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
@@ -710,10 +712,10 @@ NX_PWM_DIVIDSELECT NX_PWM_GetDividerPath(U32 Channel)
 
 	NX_ASSERT( CNULL != pRegister );
 
-	modulechannel = Channel%NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 
 	RegValue = ReadIO32(&pRegister->TCFG1);
-	RegValue >>= (4*modulechannel);
+	RegValue >>= (4*ModuleChannel);
 	RegValue &= DIV_MASK;
 
 	return (NX_PWM_DIVIDSELECT)RegValue;
@@ -730,23 +732,23 @@ NX_PWM_DIVIDSELECT NX_PWM_GetDividerPath(U32 Channel)
 CBOOL	NX_PWM_SetOutInvert(U32 Channel, CBOOL Enable)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel, RegValue, updatevalue;
+	register U32 ModuleChannel, RegValue, updatevalue;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
 	NX_ASSERT( (CFALSE==Enable) || (CTRUE == Enable) );
 
-	modulechannel = Channel%NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 
 	NX_ASSERT( CNULL != pRegister );
 
-	if(modulechannel == 4)
+	if(ModuleChannel == 4)
 		return CFALSE;
 
-	if(modulechannel == 0)
-		updatevalue = 1UL<<(4*(modulechannel+0)+2);
+	if(ModuleChannel == 0)
+		updatevalue = 1UL<<(4*(ModuleChannel+0)+2);
 	else
-		updatevalue = 1UL<<(4*(modulechannel+1)+2);
+		updatevalue = 1UL<<(4*(ModuleChannel+1)+2);
 
 	RegValue = ReadIO32(&pRegister->TCON);
 	if(Enable)
@@ -769,22 +771,22 @@ CBOOL	NX_PWM_SetOutInvert(U32 Channel, CBOOL Enable)
 CBOOL	NX_PWM_GetOutInvert(U32 Channel)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel, comparevalue;
+	register U32 ModuleChannel, comparevalue;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
 
-	modulechannel = Channel%NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 
 	NX_ASSERT( CNULL != pRegister );
 
-	if(modulechannel == 4)
+	if(ModuleChannel == 4)
 		return CFALSE;
 
-	if(modulechannel == 0)
-		comparevalue = 1UL<<(4*(modulechannel+0)+2);
+	if(ModuleChannel == 0)
+		comparevalue = 1UL<<(4*(ModuleChannel+0)+2);
 	else
-		comparevalue = 1UL<<(4*(modulechannel+1)+2);
+		comparevalue = 1UL<<(4*(ModuleChannel+1)+2);
 
 	if(comparevalue & ReadIO32(&pRegister->TCON))
 		return CTRUE;
@@ -802,11 +804,11 @@ CBOOL	NX_PWM_GetOutInvert(U32 Channel)
 void	NX_PWM_SetShotMode(U32 Channel, NX_PWM_LOADMODE ShotMode)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel, RegValue;
+	register U32 ModuleChannel, RegValue;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
 	
-	modulechannel = Channel%NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 	NX_ASSERT( (NX_PWM_LOADMODE_ONESHOT == ShotMode) || (NX_PWM_LOADMODE_AUTORELOAD == ShotMode));
 
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
@@ -815,15 +817,15 @@ void	NX_PWM_SetShotMode(U32 Channel, NX_PWM_LOADMODE ShotMode)
 
 	RegValue = ReadIO32(&pRegister->TCON);
 
-	if(modulechannel == 0)
+	if(ModuleChannel == 0)
 	{
 		RegValue &= ~(1UL<<3);
 		RegValue |= ShotMode<<3;
 	}
-	else if(modulechannel & 0x3 )
+	else if(ModuleChannel & 0x3 )
 	{
-		RegValue &= ~(1UL<<(4*(modulechannel+1)+3));
-		RegValue |= ShotMode<<(4*(modulechannel+1)+3);
+		RegValue &= ~(1UL<<(4*(ModuleChannel+1)+3));
+		RegValue |= ShotMode<<(4*(ModuleChannel+1)+3);
 	}
 	else
 	{	
@@ -843,10 +845,10 @@ void	NX_PWM_SetShotMode(U32 Channel, NX_PWM_LOADMODE ShotMode)
 NX_PWM_LOADMODE	NX_PWM_GetShotMode(U32 Channel)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel, RegValue;
+	register U32 ModuleChannel, RegValue;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
-	modulechannel = Channel%NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 
@@ -854,17 +856,17 @@ NX_PWM_LOADMODE	NX_PWM_GetShotMode(U32 Channel)
 
 	RegValue = ReadIO32(&pRegister->TCON);
 
-	if(modulechannel == 0)
+	if(ModuleChannel == 0)
 	{
 		RegValue >>= 3;
 	}
 	
-	if(modulechannel == 4)
+	if(ModuleChannel == 4)
 	{
 		RegValue >>= 22;
 	}else
 	{
-		RegValue >>= (4*(modulechannel+1)+3);
+		RegValue >>= (4*(ModuleChannel+1)+3);
 	}
 	RegValue &= 0x1;
 
@@ -882,29 +884,31 @@ NX_PWM_LOADMODE	NX_PWM_GetShotMode(U32 Channel)
 void	NX_PWM_UpdateCounter( U32 Channel )
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel, RegValue, updatedonevalue;
+	register U32 ModuleChannel;
+	register U32 RegValue			= 0;
+	register U32 UpdateDoneValue	= 0;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
-	modulechannel = Channel%NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 
 	NX_ASSERT( CNULL != pRegister );
 
 	RegValue = ReadIO32(&pRegister->TCON);
-	if(modulechannel == 0)
+	if(ModuleChannel == 0)
 	{
 		RegValue |= 1UL<<1;
-        updatedonevalue &= ~(1UL<<1);
+        UpdateDoneValue &= ~(1UL<<1);
 	}
 	else
 	{
-		RegValue |= 1<<(4*(modulechannel+1)+1);
-        updatedonevalue &= ~(1<<(4*(modulechannel+1)+1));
+		RegValue |= 1<<(4*(ModuleChannel+1)+1);
+        UpdateDoneValue &= ~(1<<(4*(ModuleChannel+1)+1));
 	}
 
 	WriteIO32(&pRegister->TCON, RegValue);
-    WriteIO32(&pRegister->TCON, updatedonevalue);
+    WriteIO32(&pRegister->TCON, UpdateDoneValue);
 }
 
 //------------------------------------------------------------------------------
@@ -916,10 +920,10 @@ void	NX_PWM_UpdateCounter( U32 Channel )
 void	NX_PWM_Run(U32 Channel)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel, RegValue;
+	register U32 ModuleChannel, RegValue;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
-	modulechannel = Channel % NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 
@@ -927,13 +931,13 @@ void	NX_PWM_Run(U32 Channel)
 
 	RegValue = ReadIO32(&pRegister->TCON);
 
-	if(modulechannel == 0)
+	if(ModuleChannel == 0)
 	{
 		RegValue |= 1UL<<0;
 	}
 	else
 	{
-		RegValue |= 1<<(4*(modulechannel+1));
+		RegValue |= 1<<(4*(ModuleChannel+1));
 	}
 
 	WriteIO32(&pRegister->TCON, RegValue);
@@ -948,10 +952,10 @@ void	NX_PWM_Run(U32 Channel)
 void	NX_PWM_Stop(U32 Channel)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel, RegValue;
+	register U32 ModuleChannel, RegValue;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
-	modulechannel = Channel%NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 
@@ -959,13 +963,13 @@ void	NX_PWM_Stop(U32 Channel)
 
 	RegValue = ReadIO32(&pRegister->TCON);
 
-	if(modulechannel == 0)
+	if(ModuleChannel == 0)
 	{
 		RegValue &= ~(1UL<<0);
 	}
 	else
 	{
-		RegValue &= ~(1<<(4*(modulechannel+1)));
+		RegValue &= ~(1<<(4*(ModuleChannel+1)));
 	}
 
 	WriteIO32(&pRegister->TCON, RegValue);
@@ -980,10 +984,10 @@ void	NX_PWM_Stop(U32 Channel)
 CBOOL	NX_PWM_IsRun(U32 Channel)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel, RegValue;
+	register U32 ModuleChannel, RegValue;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
-	modulechannel = Channel%NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 
@@ -991,13 +995,13 @@ CBOOL	NX_PWM_IsRun(U32 Channel)
 
 	RegValue = ReadIO32(&pRegister->TCON);
 
-	if(modulechannel == 0)
+	if(ModuleChannel == 0)
 	{
 		RegValue >>= 0;
 	}
 	else
 	{
-		RegValue >>= (4*(modulechannel+1));
+		RegValue >>= (4*(ModuleChannel+1));
 	}
 	RegValue &= 0x1;
 
@@ -1014,32 +1018,32 @@ CBOOL	NX_PWM_IsRun(U32 Channel)
 void	NX_PWM_SetPeriod(U32 Channel, U32 Period)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel;
+	register U32 ModuleChannel;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
-	modulechannel = Channel % NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 
 	NX_ASSERT( CNULL != pRegister );
 
-	if(modulechannel == 0)
+	if(ModuleChannel == 0)
 	{
 		WriteIO32(&pRegister->TCNTB0, Period);
 	}
-	else if(modulechannel == 1)
+	else if(ModuleChannel == 1)
 	{
 		WriteIO32(&pRegister->TCNTB1, Period);
 	}
-	else if(modulechannel == 2)
+	else if(ModuleChannel == 2)
 	{
 		WriteIO32(&pRegister->TCNTB2, Period);
 	}
-	else if(modulechannel == 3)
+	else if(ModuleChannel == 3)
 	{
 		WriteIO32(&pRegister->TCNTB3, Period);
 	}	
-	else if(modulechannel == 4)
+	else if(ModuleChannel == 4)
 	{
 		WriteIO32(&pRegister->TCNTB4, Period);
 	}
@@ -1055,31 +1059,31 @@ void	NX_PWM_SetPeriod(U32 Channel, U32 Period)
 U32		NX_PWM_GetPeriod(U32 Channel)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel;
+	register U32 ModuleChannel;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
-	modulechannel = Channel%NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 	NX_ASSERT( CNULL != pRegister );
 
-	if(modulechannel == 0)
+	if(ModuleChannel == 0)
 	{
 		return ReadIO32(&pRegister->TCNTB0);
 	}
-	else if(modulechannel == 1)
+	else if(ModuleChannel == 1)
 	{
 		return ReadIO32(&pRegister->TCNTB1);;
 	}
-	else if(modulechannel == 2)
+	else if(ModuleChannel == 2)
 	{
 		return ReadIO32(&pRegister->TCNTB2);
 	}
-	else if(modulechannel == 3)
+	else if(ModuleChannel == 3)
 	{
 		return ReadIO32(&pRegister->TCNTB3);
 	}	
-	else if(modulechannel == 4)
+	else if(ModuleChannel == 4)
 	{
 		return ReadIO32(&pRegister->TCNTB4);
 	}
@@ -1097,33 +1101,33 @@ U32		NX_PWM_GetPeriod(U32 Channel)
 CBOOL	NX_PWM_SetDuty(U32 Channel, U32 Duty)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel;
+	register U32 ModuleChannel;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
-	modulechannel = Channel%NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 
 	NX_ASSERT( CNULL != pRegister );
 
 
-	if(modulechannel == 0)
+	if(ModuleChannel == 0)
 	{
 		WriteIO32(&pRegister->TCMPB0, Duty);;
 	}
-	else if(modulechannel == 1)
+	else if(ModuleChannel == 1)
 	{
 		WriteIO32(&pRegister->TCMPB1, Duty);
 	}
-	else if(modulechannel == 2)
+	else if(ModuleChannel == 2)
 	{
 		WriteIO32(&pRegister->TCMPB2, Duty);
 	}
-	else if(modulechannel == 3)
+	else if(ModuleChannel == 3)
 	{
 		WriteIO32(&pRegister->TCMPB3, Duty);
 	}	
-	else if(modulechannel == 4)
+	else if(ModuleChannel == 4)
 	{
 		return CFALSE;
 	}
@@ -1140,32 +1144,32 @@ CBOOL	NX_PWM_SetDuty(U32 Channel, U32 Duty)
 U32		NX_PWM_GetDuty(U32 Channel)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel;
+	register U32 ModuleChannel;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
-	modulechannel = Channel%NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 
 	NX_ASSERT( CNULL != pRegister );
 
-	if(modulechannel == 0)
+	if(ModuleChannel == 0)
 	{
 		return ReadIO32(&pRegister->TCMPB0);
 	}
-	else if(modulechannel == 1)
+	else if(ModuleChannel == 1)
 	{
 		return ReadIO32(&pRegister->TCMPB1);;
 	}
-	else if(modulechannel == 2)
+	else if(ModuleChannel == 2)
 	{
 		return ReadIO32(&pRegister->TCMPB2);
 	}
-	else if(modulechannel == 3)
+	else if(ModuleChannel == 3)
 	{
 		return ReadIO32(&pRegister->TCMPB3);
 	}	
-	else if(modulechannel == 4)
+	else if(ModuleChannel == 4)
 	{
 		return CFALSE;
 	}
@@ -1182,32 +1186,32 @@ U32		NX_PWM_GetDuty(U32 Channel)
 U32		NX_PWM_GetCurrentCount(U32 Channel)
 {
 	register struct NX_PWM_RegisterSet	*pRegister;
-	register U32 modulechannel;
+	register U32 ModuleChannel;
 
 	NX_ASSERT( NUMBER_OF_PWM_MODULE > Channel/NUMBER_OF_PWM_CHANNEL );
-	modulechannel = Channel % NUMBER_OF_PWM_CHANNEL;
+	ModuleChannel = Channel % NUMBER_OF_PWM_CHANNEL;
 
 	pRegister	=	__g_pRegister[Channel/NUMBER_OF_PWM_CHANNEL];
 
 	NX_ASSERT( CNULL != pRegister );
 
-	if(modulechannel == 0)
+	if(ModuleChannel == 0)
 	{
 		return ReadIO32(&pRegister->TCNTO0);
 	}
-	else if(modulechannel == 1)
+	else if(ModuleChannel == 1)
 	{
 		return ReadIO32(&pRegister->TCNTO1);;
 	}
-	else if(modulechannel == 2)
+	else if(ModuleChannel == 2)
 	{
 		return ReadIO32(&pRegister->TCNTO2);
 	}
-	else if(modulechannel == 3)
+	else if(ModuleChannel == 3)
 	{
 		return ReadIO32(&pRegister->TCNTO3);
 	}	
-	else if(modulechannel == 4)
+	else if(ModuleChannel == 4)
 	{
 		return ReadIO32(&pRegister->TCNTO4);
 	}

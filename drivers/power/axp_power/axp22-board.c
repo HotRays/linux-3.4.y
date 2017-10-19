@@ -622,8 +622,7 @@ static struct i2c_board_info __initdata axp_mfd_i2c_board_info[] = {
 
 static int __init axp22_board_init(void)
 {
-	return i2c_register_board_info(AXP_I2CBUS,
-			axp_mfd_i2c_board_info, ARRAY_SIZE(axp_mfd_i2c_board_info));
+	return i2c_register_board_info(AXP_I2CBUS, axp_mfd_i2c_board_info, ARRAY_SIZE(axp_mfd_i2c_board_info));
 }
 arch_initcall(axp22_board_init);
 

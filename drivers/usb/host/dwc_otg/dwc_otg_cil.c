@@ -67,6 +67,7 @@
 #ifdef CONFIG_KP_AXP22
 extern int axp_otg_power_control(int enable);
 #endif
+extern void nxp_otgvbus_pwr_set(int enable);
 
 static int dwc_otg_setup_params(dwc_otg_core_if_t * core_if);
 
@@ -2265,6 +2266,7 @@ void dwc_otg_core_host_init(dwc_otg_core_if_t * core_if)
 	/* Turn on the vbus power. */
 	DWC_PRINTF("Init: Port Power? op_state=%d\n", core_if->op_state);
 	if (core_if->op_state == A_HOST) {
+		nxp_otgvbus_pwr_set(1);
 #if defined(CONFIG_BATTERY_NXE2000) || defined(CONFIG_KP_AXP22)
 		do{
 #if defined(CONFIG_BATTERY_NXE2000)

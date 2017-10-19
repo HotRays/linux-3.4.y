@@ -469,6 +469,13 @@ static void _hw_child_enable(struct nxp_capture *me, u32 child, bool on)
                 _backup_reset_restore_register(me->module);
             }
 #endif
+            if(deci_enable){
+            		NX_VIP_SetDecimation(me->module, 
+            		me->decimator.src_width, 
+            		me->decimator.src_height, 
+            		me->decimator.target_width, 
+            		me->decimator.target_height);
+			}
             NX_VIP_SetVIPEnable(me->module, CTRUE, CTRUE, clip_enable, deci_enable);
             NX_VIP_SetInterruptEnable(me->module, CAPTURE_CLIPPER_INT, CTRUE);
         } else {
@@ -484,7 +491,7 @@ static void _hw_child_enable(struct nxp_capture *me, u32 child, bool on)
 
 }
 
-static void _hw_run(struct nxp_capture *me, bool on)
+__attribute__((__unused__)) static void _hw_run(struct nxp_capture *me, bool on)
 {
     if (on) {
         /* vmsg("%s: capture child 0x%x\n", __func__, me->running_child_bitmap); */
@@ -958,8 +965,6 @@ void release_nxp_capture(struct nxp_capture *me)
 int register_nxp_capture(struct nxp_capture *me)
 {
     int ret;
-    struct nxp_v4l2_i2c_board_info *sensor_info;
-    struct v4l2_subdev *sensor;
 #ifdef CONFIG_NXP_CAPTURE_MIPI_CSI
     bool csi_enabled = me->interface_type == NXP_CAPTURE_INF_CSI;
 #endif
@@ -990,28 +995,11 @@ int register_nxp_capture(struct nxp_capture *me)
     }
 #endif
 
-    /* find sensor subdev */
-#if 0
-    sensor_info = me->platdata->sensor;
-    if (!sensor_info) {
-        pr_err("%s: can't find sensor platdata\n", __func__);
-        goto error_sensor;
-    }
-
-    sensor = _register_sensor(me, sensor_info);
-    if (!sensor) {
-        pr_err("%s: can't register sensor subdev\n", __func__);
-        goto error_sensor;
-    }
-#else
     if (NULL == _register_sensor(me, me->platdata->sensor)) {
         pr_err("%s: can't register sensor subdev\n", __func__);
         goto error_sensor;
     }
-#endif
 
-    // psw0523 fix for urbetter
-    /* ret = request_irq(me->irq, &_irq_handler, IRQF_DISABLED, "nxp-capture", me); */
     ret = request_irq(me->irq, &_irq_handler, IRQF_SHARED, "nxp-capture", me);
     if (ret) {
         pr_err("%s: failed to request_irq()\n", __func__);

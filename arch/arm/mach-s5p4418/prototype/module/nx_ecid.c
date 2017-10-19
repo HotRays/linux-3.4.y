@@ -519,14 +519,13 @@ U32     NX_ECID_GetSelectFlowingBank( void )
     return (U32)((__g_ModuleVariables.pRegister->EC[2] & SELBANK_MASK) >> SELBANK_POS);
 }
 
+
 // 필요는 없어 보이지만 기존 구현에서 사용하고 있을지도 모르니 남겨둔다
-void NX_ECID_SetBONDINGID
-(
-    CBOOL set_cs, CBOOL set_sigdev, CBOOL set_fset, CBOOL set_prchg
-)
+void NX_ECID_SetBONDINGID( CBOOL set_cs, CBOOL set_sigdev, CBOOL set_fset, CBOOL set_prchg )
 {
+    U32 Enable = 0;
     NX_ASSERT( CNULL != __g_ModuleVariables.pRegister );
-    U32 Enable;
+
     Enable = (U32)( (set_cs<<6) | (set_sigdev<<5) | (set_fset<<4) | (set_prchg<<3) );
     __g_ModuleVariables.pRegister->EC[0] = (U32)(Enable&0x0078);
 }

@@ -262,7 +262,8 @@ void	NX_ALIVE_SetInputEnable32( U32 value32 );
 U32		NX_ALIVE_GetOutputEnable32 (void);
 U32		NX_ALIVE_GetInputEnable32 (void);
 void    NX_ALIVE_SetPullUpEnable32( U32 value32 );
-
+void    NX_ALIVE_SetOutputValue32( U32 value32 );
+U32     NX_ALIVE_GetOutputValue32( void );
 U32     NX_ALIVE_GetInputValue32( void );
 void	NX_ALIVE_SetDetectEnable32( U32 value32 );
 void	NX_ALIVE_SetDetectMode32( NX_ALIVE_DETECTMODE DetectMode, U32 value32 );

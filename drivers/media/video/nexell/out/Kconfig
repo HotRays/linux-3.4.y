@@ -32,4 +32,11 @@ config NXP_OUT_TVOUT
     ---help---
       Say y here to enable v4l2 tvout
 
+config NXP_OUT_SECONDDISPLAY
+    bool "Enable Second Display"
+    select NXP_DISPLAY_LVDS
+    default n
+    ---help---
+    Say y here to enable v4l2 second display
+
 endif
