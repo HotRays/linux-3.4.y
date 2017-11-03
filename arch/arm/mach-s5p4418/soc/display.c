@@ -35,7 +35,7 @@
 
 #include "display_4418.h"
 
-#if (0)
+#if (1)
 #define DBGOUT(msg...)		do { printk(KERN_INFO msg); } while (0)
 #else
 #define DBGOUT(msg...)		do {} while (0)
@@ -810,7 +810,7 @@ static int  disp_multily_suspend(struct disp_process_dev *pdev)
 	int mlc_len = sizeof(struct NX_MLC_RegisterSet);
 	int module = info->module;
 
-	PM_DBGOUT("%s display.%d (MLC:%s, DPC:%s)\n",
+	DBGOUT("%s display.%d (MLC:%s, DPC:%s)\n",
 		__func__, module, pmly->enable?"ON":"OFF", pdev->status & PROC_STATUS_ENABLE?"ON":"OFF");
 
 	NX_MLC_SetMLCEnable(module, CFALSE);
@@ -829,7 +829,7 @@ static void disp_multily_resume(struct disp_process_dev *pdev)
 	int module = info->module;
 	int i = 0;
 
-	PM_DBGOUT("%s display.%d (MLC:%s, DPC:%s)\n",
+	DBGOUT("%s display.%d (MLC:%s, DPC:%s)\n",
 		__func__, module, pmly->enable?"ON":"OFF",
 				pdev->status & PROC_STATUS_ENABLE?"ON":"OFF");
 
@@ -859,7 +859,7 @@ static int  disp_syncgen_suspend(struct disp_process_dev *pdev)
 	int dpc_len = sizeof(struct NX_DPC_RegisterSet);
 	int module = info->module;
 
-	PM_DBGOUT("%s display.%d (MLC:%s, DPC:%s)\n",
+	DBGOUT("%s display.%d (MLC:%s, DPC:%s)\n",
 		__func__, module, pmly->enable?"ON":"OFF", pdev->status & PROC_STATUS_ENABLE?"ON":"OFF");
 
 	NX_MLC_SetMLCEnable(module, CFALSE);
@@ -886,7 +886,7 @@ static void disp_syncgen_resume(struct disp_process_dev *pdev)
 	int module = info->module;
 	int i = 0;
 
-	PM_DBGOUT("%s display.%d (MLC:%s, DPC:%s)\n",
+	DBGOUT("%s display.%d (MLC:%s, DPC:%s)\n",
 		__func__, module, pmly->enable?"ON":"OFF",
 				pdev->status & PROC_STATUS_ENABLE?"ON":"OFF");
 
@@ -971,7 +971,7 @@ static inline void disp_ops_pre_resume_devs(struct list_head *head)
 	list_for_each_prev(pos, head) {
 		pdev = container_of(pos, struct disp_process_dev, list);
 		ops  = pdev->disp_ops;
-		PM_DBGOUT("PRE RESUME: %s, ops=0x%p\n", pdev->name, ops);
+		DBGOUT("PRE RESUME: %s, ops=0x%p\n", pdev->name, ops);
 		if (ops && ops->pre_resume)
 			ops->pre_resume(ops->dev);
 	}
@@ -988,7 +988,7 @@ static inline int disp_ops_suspend_devs(struct list_head *head, int suspend)
 		list_for_each_prev(pos, head) {
 			pdev = container_of(pos, struct disp_process_dev, list);
 			ops  = pdev->disp_ops;
-			PM_DBGOUT("SUSPEND: %s, ops=0x%p\n", pdev->name, ops);
+			DBGOUT("SUSPEND: %s, ops=0x%p\n", pdev->name, ops);
 			if (ops && ops->suspend) {
 				ret = ops->suspend(ops->dev);
 				if (ret)
@@ -999,7 +999,7 @@ static inline int disp_ops_suspend_devs(struct list_head *head, int suspend)
 		list_for_each(pos, head) {
 			pdev = container_of(pos, struct disp_process_dev, list);
 			ops  = pdev->disp_ops;
-			PM_DBGOUT("RESUME : %s, ops=0x%p\n", pdev->name, ops);
+			DBGOUT("RESUME : %s, ops=0x%p\n", pdev->name, ops);
 			if (ops && ops->resume)
 				ops->resume(ops->dev);
 		}
@@ -1886,7 +1886,7 @@ int nxp_soc_disp_device_suspend(enum disp_dev_type device)
 	int ret = 0;
 
 	RET_ASSERT_VAL(DEVICE_SIZE > device, -EINVAL);
-	PM_DBGOUT("%s: %s\n", __func__, dev_to_str(device));
+	DBGOUT("%s: %s\n", __func__, dev_to_str(device));
 
 	ops = get_display_ops(device);
 
@@ -1930,7 +1930,7 @@ void nxp_soc_disp_device_resume(enum disp_dev_type device)
 	struct lcd_operation *lcd;
 
 	RET_ASSERT(DEVICE_SIZE > device);
-	PM_DBGOUT("%s: %s\n", __func__, dev_to_str(device));
+	DBGOUT("%s: %s\n", __func__, dev_to_str(device));
 
 	DISPLAY_TOP_RESET();
 
@@ -1969,14 +1969,14 @@ int nxp_soc_disp_device_suspend_all(int module)
 	int ret = 0;
 
 	RET_ASSERT_VAL(0 == module || 1 == module, -EINVAL);
-	PM_DBGOUT("%s: display.%d\n", __func__, module);
+	DBGOUT("%s: display.%d\n", __func__, module);
 
 	/* LCD control */
 	if (lcd && lcd->backlight_suspend)
 		lcd->backlight_suspend(module, lcd->data);
 
 	if (list_empty(&info->link)) {
-		PM_DBGOUT("display:%9s not connected display out ...\n",
+		DBGOUT("display:%9s not connected display out ...\n",
 			dev_to_str(((struct disp_process_dev *)
 			get_display_ptr((0 == module ? DISP_DEVICE_SYNCGEN0 : DISP_DEVICE_SYNCGEN1)))->dev_id));
 		return 0;
@@ -2003,7 +2003,7 @@ void nxp_soc_disp_device_resume_all(int module)
 	struct lcd_operation *lcd = info->lcd_ops;
 
 	RET_ASSERT(0 == module || 1 == module);
-	PM_DBGOUT("%s: display.%d\n", __func__, module);
+	DBGOUT("%s: display.%d\n", __func__, module);
 
 	DISPLAY_TOP_RESET();
 
@@ -2013,7 +2013,7 @@ void nxp_soc_disp_device_resume_all(int module)
 
 	/* device control */
 	if (list_empty(&info->link)) {
-		PM_DBGOUT("display:%9s not connected display out ...\n",
+		DBGOUT("display:%9s not connected display out ...\n",
 			dev_to_str(((struct disp_process_dev *)
 			get_display_ptr((0 == module ? DISP_DEVICE_SYNCGEN0 : DISP_DEVICE_SYNCGEN1)))->dev_id));
 		return;
@@ -2590,7 +2590,7 @@ static int display_soc_resume(struct platform_device *pldev)
 	struct disp_control_info *info = pdev->dev_info;
 	int module = info->module;
 
-	PM_DBGOUT("%s [%d]\n", __func__, module);
+	DBGOUT("%s [%d]\n", __func__, module);
 
 	DISPLAY_TOP_RESET();
 
@@ -2615,6 +2615,8 @@ static int display_soc_probe(struct platform_device *pldev)
 	int size = sizeof(*info);
 	int ret = 0;
 	RET_ASSERT_VAL(0 == module || 1 == module, -EINVAL);
+
+	DBGOUT("%s ----\n", __func__);
 
 	size += sizeof(struct disp_syncgen_par);
 	info = kzalloc(size, GFP_KERNEL);

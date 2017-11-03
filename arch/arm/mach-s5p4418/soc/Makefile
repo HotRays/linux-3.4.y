@@ -4,6 +4,7 @@
 # Makefile for the SLsi CPU
 
 obj-y += peri_reset.o gpio.o
+obj-flags += -DDEBUG
 
 obj-$(CONFIG_NXP_PWM)		+= pwm.o
 obj-$(CONFIG_NXP_DISPLAY)		+= display.o

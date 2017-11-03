@@ -1409,7 +1409,11 @@ void __init nxp_cpu_devices_register(void)
 	platform_add_devices(syncgen_devices, ARRAY_SIZE(syncgen_devices));
 #endif
 
-#if defined(CONFIG_NXP_DISPLAY_LCD)
+#if defined(CONFIG_NXP_DISPLAY_LCD) \
+	|| defined(CONFIG_NXP_DISPLAY_LVDS) \
+	|| defined(CONFIG_NXP_DISPLAY_MIPI) \
+	|| defined(CONFIG_NXP_DISPLAY_HDMI)
+
 	if(sscreen_type == 1){
 		printk("mach: add device lvds \n");
 		lvds_data.display_in = DISPLAY_INPUT(1);
@@ -1439,21 +1443,6 @@ void __init nxp_cpu_devices_register(void)
 		lcd_data.display_in = DISPLAY_INPUT(0);
 		platform_device_register(&lcd_device);
 	}
-#endif
-
-#if defined(CONFIG_NXP_DISPLAY_LVDS)
-	printk("mach: add device lvds \n");
-	platform_device_register(&lvds_device);
-#endif
-
-#if defined(CONFIG_NXP_DISPLAY_MIPI)
-	printk("mach: add device mipi \n");
-	platform_device_register(&mipi_device);
-#endif
-
-#if defined(CONFIG_NXP_DISPLAY_HDMI)
-	printk("mach: add device hdmi \n");
-	platform_device_register(&hdmi_device);
 #endif
 
 #if defined(CONFIG_NXP_DISPLAY_RESC)

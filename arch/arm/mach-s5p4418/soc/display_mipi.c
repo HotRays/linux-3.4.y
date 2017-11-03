@@ -90,7 +90,7 @@ static int  mipi_prepare(struct disp_process_dev *pdev)
 	bandctl = pmipi->bandctl;
 	pllctl  = pmipi->pllctl;
 	phyctl  = pmipi->phyctl;
-printk("mipi prepare %x %x %x %x\n", pllpms, bandctl, pllctl,phyctl);
+	printk("mipi prepare %x %x %x %x\n", pllpms, bandctl, pllctl,phyctl);
 	switch (input) {
 	case DISP_DEVICE_SYNCGEN0:	input = 0; break;
 	case DISP_DEVICE_SYNCGEN1:	input = 1; break;
@@ -210,7 +210,7 @@ static int  mipi_enable(struct disp_process_dev *pdev, int enable)
 	int clkid = DISP_CLOCK_MIPI;
 	CBOOL on = (enable ? CTRUE : CFALSE);
 	DBGOUT("%s %s, %s\n", __func__, dev_to_str(pdev->dev_id), enable?"ON":"OFF");
-
+	{
        int enable_io = PAD_GPIO_C;
 
        if (enable){
@@ -224,7 +224,7 @@ static int  mipi_enable(struct disp_process_dev *pdev, int enable)
 	       msleep(30);
 	       nxp_soc_gpio_set_out_value(enable_io, 0);
        }
-
+	}
 	/* SPDIF and MIPI */
     NX_DISPTOP_CLKGEN_SetClockDivisorEnable(clkid, CTRUE);
 
@@ -241,14 +241,14 @@ static int  mipi_stat_enable(struct disp_process_dev *pdev)
 
 static int  mipi_suspend(struct disp_process_dev *pdev)
 {
-	PM_DBGOUT("%s\n", __func__);
+	DBGOUT("%s\n", __func__);
 	return mipi_enable(pdev, 0);
 }
 
 static void mipi_resume(struct disp_process_dev *pdev)
 {
 	int index = 0;
-	PM_DBGOUT("%s\n", __func__);
+	DBGOUT("%s\n", __func__);
 
 	NX_TIEOFF_Set(TIEOFFINDEX_OF_MIPI0_NX_DPSRAM_1R1W_EMAA, 3);
 	NX_TIEOFF_Set(TIEOFFINDEX_OF_MIPI0_NX_DPSRAM_1R1W_EMAB, 3);
@@ -303,6 +303,129 @@ static void mipi_initialize(void)
 	NX_MIPI_OpenModule(0);
 }
 
+struct data_val{
+	u8 data[48];
+};
+struct mipi_reg_val{
+	u32 cmd;
+	u32 addr;
+	u32 cnt;
+	struct data_val data;
+};
+/*
+ {0x15, 0xC4,    1, {0x83}},        //15 表一指令及一筆資料
+ {0x39, 0xC9,    2, {0x01,0x10}},   //39 表一指令及多筆資料
+ {0x05, 0x00,    1, {0x11}},        //05 表單一指令沒有資料
+ {0xff, 120, 0, {0}},        	//MIPI_DELAY 表 延遲時間
+*/
+static struct mipi_reg_val mipi_init_data[] = 
+{
+	{0x15, 0xB2, 1, {0x7D,}},
+	{0x15, 0xAE, 1, {0x0B,}},
+	{0x15, 0xB6, 1, {0x18,}},
+	{0x15, 0xD2, 1, {0x64,}},
+};
+
+static void mipilcd_dcs_write( unsigned int id, unsigned int data0, unsigned int data1 )
+{
+	U32 index = 0;
+	volatile NX_MIPI_RegisterSet* mipi_base = (volatile NX_MIPI_RegisterSet*)IO_ADDRESS(NX_MIPI_GetPhysicalAddress(index));
+	mipi_base->DSIM_PKTHDR = id | (data0<<8) | (data1<<16);
+}
+
+static void mipilcd_dcs_long_write(U32 cmd, U32 ByteCount, U8* pByteData )
+{
+	U32 DataCount32 = (ByteCount+3)/4;
+	int i = 0;
+	U32 index = 0;
+	volatile NX_MIPI_RegisterSet* mipi_base = (volatile NX_MIPI_RegisterSet*)IO_ADDRESS(NX_MIPI_GetPhysicalAddress(index));
+
+	NX_ASSERT( 512 >= DataCount32 );
+
+	for( i=0; i<DataCount32; i++ )
+	{
+		mipi_base->DSIM_PAYLOAD = (pByteData[3]<<24)|(pByteData[2]<<16)|(pByteData[1]<<8)|pByteData[0];
+		pByteData += 4;
+	}
+
+	mipi_base->DSIM_PKTHDR  = (cmd & 0xff) | (ByteCount<<8);
+}
+
+static int mipi_lcd_init(int width, int height, void *data)
+{
+	int i=0;
+	struct disp_mipi_param *pmipi = (struct disp_mipi_param*)data;
+	int size=ARRAY_SIZE(mipi_init_data);
+
+	u32 index = 0;
+	u32 value = 0;
+	u8 pByteData[48];
+
+	volatile NX_MIPI_RegisterSet* mipi_base = (volatile NX_MIPI_RegisterSet*)IO_ADDRESS(NX_MIPI_GetPhysicalAddress(index));
+	value = mipi_base->DSIM_ESCMODE;
+	mipi_base->DSIM_ESCMODE = value|(3 << 6);
+	value = mipi_base->DSIM_ESCMODE;
+	printk("DSIM_ESCMODE : 0x%x\n", value);
+	switch(pmipi->bandctl)
+	{
+		case 0xF:	printk("MIPI clk: 1000MHz \n");	break;
+		case 0xE:	printk("MIPI clk:  900MHz \n");	break;
+		case 0xD:	printk("MIPI clk:  840MHz \n");	break;
+		case 0xC:	printk("MIPI clk:  760MHz \n");	break;
+		case 0xB:	printk("MIPI clk:  660MHz \n");	break;
+		case 0xA:	printk("MIPI clk:  600MHz \n");	break;
+		case 0x9:	printk("MIPI clk:  540MHz \n");	break;
+		case 0x8:	printk("MIPI clk:  480MHz \n");	break;
+		case 0x7:	printk("MIPI clk:  420MHz \n");	break;
+		case 0x6:	printk("MIPI clk:  330MHz \n");	break;
+		case 0x5:	printk("MIPI clk:  300MHz \n");	break;
+		case 0x4:	printk("MIPI clk:  210MHz \n");	break;
+		case 0x3:	printk("MIPI clk:  180MHz \n");	break;
+		case 0x2:	printk("MIPI clk:  150MHz \n");	break;
+		case 0x1:	printk("MIPI clk:  100MHz \n");	break;
+		case 0x0:	printk("MIPI clk:   80MHz \n");	break;
+		default :	printk("MIPI clk:  unknown \n");break;
+	}
+
+	mdelay(10);
+
+	for(i=0; i<size; i++)
+	{
+		switch(mipi_init_data[i].cmd)
+		{
+			case 0x05:
+				mipilcd_dcs_write(mipi_init_data[i].cmd, mipi_init_data[i].data.data[0], 0x00);
+				break;
+
+			case 0x13:
+				mipilcd_dcs_write(mipi_init_data[i].cmd, mipi_init_data[i].addr, mipi_init_data[i].data.data[0]);
+				break;
+
+			case 0x15:
+				mipilcd_dcs_write(mipi_init_data[i].cmd, mipi_init_data[i].addr, mipi_init_data[i].data.data[0]);
+				break;
+ 			case 0x39:
+				pByteData[0] = mipi_init_data[i].addr;
+				memcpy(&pByteData[1], &mipi_init_data[i].data.data[0], 48);
+				mipilcd_dcs_long_write(mipi_init_data[i].cmd, mipi_init_data[i].cnt+1, &pByteData[0]);
+				break;
+			case 0xff:
+				//printk("delay %d\n", mipi_init_data[i].addr);
+				mdelay(mipi_init_data[i].addr);
+				break;
+		}
+		mdelay(1);
+	}
+
+	value = mipi_base->DSIM_ESCMODE;
+	mipi_base->DSIM_ESCMODE = value&(~(3 << 6));
+	value = mipi_base->DSIM_ESCMODE;
+	printk("DSIM_ESCMODE : 0x%x\n", value);
+
+	mdelay(10);
+	return 0;
+}
+
 static int mipi_probe(struct platform_device *pdev)
 {
 	struct nxp_lcd_plat_data *plat = pdev->dev.platform_data;
@@ -324,6 +447,12 @@ static int mipi_probe(struct platform_device *pdev)
 
 	if (plat->dev_param)
 		memcpy(pmipi, plat->dev_param, sizeof(*pmipi));
+
+	if(!pmipi->lcd_init) {
+		printk("%s LCD Init nil, assign default.\n", __func__);
+		pmipi->lcd_init = mipi_lcd_init;
+		pmipi->private_data = pmipi;
+	}
 
 	sgpar = plat->sync_gen;
 	psync = plat->vsync;
